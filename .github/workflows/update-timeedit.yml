@@ -1,0 +1,40 @@
+name: Update VUB TimeEdit calendar
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'data/vub.ics'
+  schedule:
+    - cron: '17 */3 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  update-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download TimeEdit calendar
+        env:
+          TIMEEDIT_URL: https://cloud.timeedit.net/be_vub/web/public/ri626Q99Y29Z2XQ526868926y9Z293022X299X6Q229225426X9X2261Z23Q2Xu6720321uQwX6n96Z94.ics
+        run: |
+          mkdir -p data
+          curl --fail --location --retry 3 --retry-delay 3 "$TIMEEDIT_URL" -o data/vub.ics
+          grep -q "BEGIN:VCALENDAR" data/vub.ics
+
+      - name: Commit calendar when changed
+        run: |
+          if [ -z "$(git status --porcelain -- data/vub.ics)" ]; then
+            echo "Calendar did not change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/vub.ics
+          git commit -m "Update VUB TimeEdit calendar"
+          git push
