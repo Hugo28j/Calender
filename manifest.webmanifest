@@ -1,0 +1,11 @@
+{
+  "name": "Mijn Studie- en Takenagenda",
+  "short_name": "Mijn Agenda",
+  "description": "Persoonlijke studieagenda met VUB TimeEdit-rooster",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F0EDE6",
+  "theme_color": "#111827",
+  "lang": "nl-BE"
+}
