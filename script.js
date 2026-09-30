@@ -117,7 +117,7 @@ function eventColor(ev) {
   const cls = classById(ev.classId);
   if (cls) return cls.color;
   const map = { Taak:'#6366F1', Deadline:'#EF4444', Evenement:'#F59E0B',
-                Studieblok:'#3B82F6', Les:'#8B5CF6', Familie:'#F97316', Andere:'#6B7280' };
+                Studieblok:'#3B82F6', Les:'#8B5CF6', Familie:'#F97316', Sport:'#0EA5E9', Andere:'#6B7280' };
   return map[ev.type] || '#6366F1';
 }
 
@@ -1548,6 +1548,7 @@ function renderStats() {
     Deadline:   '⏰ Deadlines',
     Evenement:  '🎉 Evenementen',
     Familie:    '👨‍👩‍👦 Familie',
+    Sport:      '🏃 Sport',
     Andere:     '📎 Andere',
   };
 
@@ -1650,7 +1651,7 @@ function renderStats() {
       const count = byType[type] || 0;
       if (count === 0) return;
       const col = { Studieblok:'#3B82F6', Les:'#8B5CF6', Taak:'#6366F1',
-                    Deadline:'#EF4444', Evenement:'#F59E0B', Familie:'#F97316', Andere:'#6B7280' }[type] || '#9CA3AF';
+                    Deadline:'#EF4444', Evenement:'#F59E0B', Familie:'#F97316', Sport:'#0EA5E9', Andere:'#6B7280' }[type] || '#9CA3AF';
       html += `<div class="stats-trophy-card" style="border-top-color:${col}">
         <div class="stats-trophy-label">${label}</div>
         <div class="stats-trophy-count" style="color:${col}">${count}</div>
