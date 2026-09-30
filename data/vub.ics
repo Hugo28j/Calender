@@ -1,0 +1,691 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-WR-CALNAME:TimeEdit-Sterkteleer (2627)
+ \, 1019074BNR\, IR\, +7 vak (8)-20260
+ 901
+X-WR-CALDESC:Date limit 14-09-2026 - 05-10-2031
+X-PUBLISHED-TTL:PT20M
+CALSCALE:GREGORIAN
+PRODID:-//TimeEdit\\\, //TimeEdit//EN
+BEGIN:VEVENT
+DTSTART:20260928T120000Z
+DTEND:20260928T140000Z
+UID:344666-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management and Entrepreneu
+ rship 1023140ANR (Algemeen 2627)\, student group: Busin
+ ess Management and Entrepreneurship 4023402DNR (Algemee
+ n 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: De Moortel Kevin \nroom: G.1.52. room: 1
+ 16 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 344
+ 666
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260929T110000Z
+DTEND:20260929T130000Z
+UID:345203-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: G.1.52. room: 116 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  345203
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260929T130000Z
+DTEND:20260929T150000Z
+UID:345580-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management an
+ d Entrepreneurship 1023140ANR (Algemeen 26
+ 27)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: De Moortel Kevin\, docent: Mu
+ koko Ntondo Bénit \nroom: E.0.10. room: 91 \nl
+ okaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 345580
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260930T060000Z
+DTEND:20260930T080000Z
+UID:347586-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Energieconversie 1019082CNR (Algemeen 2627)
+LOCATION:room: P3 instructielokaal
+DESCRIPTION:docent: Bram Svend \nroom: P3 instructi
+ elokaal. room: 38 \nlokaaltype: Seminarielokaal 
+ \nlestype: Hoorcollege\, lestype: Werkcollege\nI
+ D 347586
+ATTENDEE;CN="course: Energieconversie (2627)";CUTYPE=IN
+ DIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260930T070000Z
+DTEND:20260930T100000Z
+UID:347127-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: E.0.10. room: 91 \nlokaaltype: Le
+ slokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347127
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260930T080000Z
+DTEND:20260930T100000Z
+UID:352617-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (Algemeen 2627)
+LOCATION:room: E.0.06
+DESCRIPTION:docent: Schram Christophe \nroom: E.0.06. room: 
+ 62 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 352
+ 617
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261001T060000Z
+DTEND:20261001T080000Z
+UID:347584-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: K.2.56
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: K.2.56. room: 107 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  347584
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261001T080000Z
+DTEND:20261001T100000Z
+UID:347576-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Wiskunde voor signa
+ len en systemen 1019070BNR (Algemeen 26
+ 27)
+LOCATION:room: E.0.05
+DESCRIPTION:docent: Braeken An\, docent: Vandervelden Thiba
+ ut Michel J \nroom: E.0.05. room: 100 \nlokaaltype: Lesl
+ okaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347576
+ATTENDEE;CN="course: Wiskunde voor signalen en systemen (2627)";
+ CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261005T120000Z
+DTEND:20261005T140000Z
+UID:347404-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management and Entrepreneu
+ rship 1023140ANR (Algemeen 2627)\, student group: Busin
+ ess Management and Entrepreneurship 4023402DNR (Algemee
+ n 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: De Moortel Kevin \nroom: G.1.52. room: 1
+ 16 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 347
+ 404
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261007T080000Z
+DTEND:20261007T100000Z
+UID:352618-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (Algemeen 2627)
+LOCATION:room: E.0.06
+DESCRIPTION:docent: Schram Christophe \nroom: E.0.06. room: 
+ 62 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 352
+ 618
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261012T080000Z
+DTEND:20261012T100000Z
+UID:414296-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (WPO1 2627)
+LOCATION:room: E.0.04
+DESCRIPTION:docent: Damiola Luca\, docent: Granj
+ al Cruz Gonçalo \nroom: E.0.04. room: 64 \nlo
+ kaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 414296
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261012T120000Z
+DTEND:20261012T140000Z
+UID:347405-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management and Entrepreneu
+ rship 1023140ANR (Algemeen 2627)\, student group: Busin
+ ess Management and Entrepreneurship 4023402DNR (Algemee
+ n 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: De Moortel Kevin \nroom: G.1.52. room: 1
+ 16 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 347
+ 405
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261013T080000Z
+DTEND:20261013T100000Z
+UID:347397-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:
+DESCRIPTION:docent: Van Ham Ronald \nlokaaltyp
+ e: Leslokaal \nlestype: Hoorcollege\nID 347
+ 397
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261013T110000Z
+DTEND:20261013T130000Z
+UID:347398-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:room: B.0.31
+DESCRIPTION:docent: Van Ham Ronald \nroom: B.0.31. room: 8
+ 0 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 34
+ 7398
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261013T110000Z
+DTEND:20261013T130000Z
+UID:348031-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: G.1.52. room: 116 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  348031
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261013T130000Z
+DTEND:20261013T150000Z
+UID:352651-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management an
+ d Entrepreneurship 1023140ANR (Algemeen 26
+ 27)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: De Moortel Kevin\, docent: Mu
+ koko Ntondo Bénit \nroom: E.0.10. room: 91 \nl
+ okaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 352651
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261014T060000Z
+DTEND:20261014T080000Z
+UID:350882-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Energieconversie 1019082CNR (Algemeen 2627)
+LOCATION:room: P3 instructielokaal
+DESCRIPTION:docent: Bram Svend \nroom: P3 instructi
+ elokaal. room: 38 \nlokaaltype: Seminarielokaal 
+ \nlestype: Hoorcollege\, lestype: Werkcollege\nI
+ D 350882
+ATTENDEE;CN="course: Energieconversie (2627)";CUTYPE=IN
+ DIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261014T070000Z
+DTEND:20261014T100000Z
+UID:347128-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: E.0.10. room: 91 \nlokaaltype: Le
+ slokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347128
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261014T080000Z
+DTEND:20261014T100000Z
+UID:347156-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (Algemeen 2627)
+LOCATION:room: E.0.06
+DESCRIPTION:docent: Schram Christophe \nroom: E.0.06. room: 
+ 62 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 347
+ 156
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261015T060000Z
+DTEND:20261015T080000Z
+UID:347585-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: K.2.56
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: K.2.56. room: 107 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  347585
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261015T080000Z
+DTEND:20261015T100000Z
+UID:347577-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Wiskunde voor signa
+ len en systemen 1019070BNR (Algemeen 26
+ 27)
+LOCATION:room: E.0.05
+DESCRIPTION:docent: Braeken An\, docent: Vandervelden Thiba
+ ut Michel J \nroom: E.0.05. room: 100 \nlokaaltype: Lesl
+ okaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347577
+ATTENDEE;CN="course: Wiskunde voor signalen en systemen (2627)";
+ CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261019T080000Z
+DTEND:20261019T100000Z
+UID:414295-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (WPO1 2627)
+LOCATION:room: E.0.04
+DESCRIPTION:docent: Damiola Luca\, docent: Granj
+ al Cruz Gonçalo \nroom: E.0.04. room: 64 \nlo
+ kaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 414295
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261019T120000Z
+DTEND:20261019T140000Z
+UID:347406-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management and Entrepreneu
+ rship 1023140ANR (Algemeen 2627)\, student group: Busin
+ ess Management and Entrepreneurship 4023402DNR (Algemee
+ n 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: De Moortel Kevin \nroom: G.1.52. room: 1
+ 16 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 347
+ 406
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261020T080000Z
+DTEND:20261020T100000Z
+UID:352626-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:
+DESCRIPTION:docent: Van Ham Ronald \nlokaaltyp
+ e: Leslokaal \nlestype: Hoorcollege\nID 352
+ 626
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261020T110000Z
+DTEND:20261020T130000Z
+UID:348032-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: G.1.52. room: 116 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  348032
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261020T110000Z
+DTEND:20261020T130000Z
+UID:352628-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:room: B.0.31
+DESCRIPTION:docent: Van Ham Ronald \nroom: B.0.31. room: 8
+ 0 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 35
+ 2628
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261021T060000Z
+DTEND:20261021T080000Z
+UID:347587-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Energieconversie 1019082CNR (Algemeen 2627)
+LOCATION:room: P3 instructielokaal
+DESCRIPTION:docent: Bram Svend \nroom: P3 instructi
+ elokaal. room: 38 \nlokaaltype: Seminarielokaal 
+ \nlestype: Hoorcollege\, lestype: Werkcollege\nI
+ D 347587
+ATTENDEE;CN="course: Energieconversie (2627)";CUTYPE=IN
+ DIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261021T070000Z
+DTEND:20261021T100000Z
+UID:347129-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: E.0.10. room: 91 \nlokaaltype: Le
+ slokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347129
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261021T080000Z
+DTEND:20261021T100000Z
+UID:414293-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (Algemeen 2627)
+LOCATION:room: E.0.06
+DESCRIPTION:docent: Schram Christophe \nroom: E.0.06. room: 
+ 62 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 414
+ 293
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261022T080000Z
+DTEND:20261022T100000Z
+UID:347578-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Wiskunde voor signa
+ len en systemen 1019070BNR (Algemeen 26
+ 27)
+LOCATION:room: E.0.05
+DESCRIPTION:docent: Braeken An\, docent: Vandervelden Thiba
+ ut Michel J \nroom: E.0.05. room: 100 \nlokaaltype: Lesl
+ okaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 347578
+ATTENDEE;CN="course: Wiskunde voor signalen en systemen (2627)";
+ CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261026T090000Z
+DTEND:20261026T110000Z
+UID:347403-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (WPO1 2627)
+LOCATION:room: E.0.04
+DESCRIPTION:docent: Damiola Luca\, docent: Granj
+ al Cruz Gonçalo \nroom: E.0.04. room: 64 \nlo
+ kaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 347403
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261026T130000Z
+DTEND:20261026T150000Z
+UID:347407-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management and Entrepreneu
+ rship 1023140ANR (Algemeen 2627)\, student group: Busin
+ ess Management and Entrepreneurship 4023402DNR (Algemee
+ n 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: De Moortel Kevin \nroom: G.1.52. room: 1
+ 16 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 347
+ 407
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261027T090000Z
+DTEND:20261027T110000Z
+UID:352627-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:room: E.0.05
+DESCRIPTION:docent: Van Ham Ronald \nroom: E.0.05. room: 10
+ 0 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 352
+ 627
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261027T120000Z
+DTEND:20261027T140000Z
+UID:348033-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: G.1.52
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: G.1.52. room: 116 \nlokaaltype: L
+ eslokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID
+  348033
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261027T120000Z
+DTEND:20261027T140000Z
+UID:352629-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Pneumatiek en 
+ Hydraulica 1018375BNR (Algemeen 26
+ 27)
+LOCATION:room: B.0.31
+DESCRIPTION:docent: Van Ham Ronald \nroom: B.0.31. room: 8
+ 0 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 35
+ 2629
+ATTENDEE;CN="course: Pneumatiek en Hydraulica (2627)";CUTYP
+ E=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261027T140000Z
+DTEND:20261027T160000Z
+UID:352652-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Business Management an
+ d Entrepreneurship 1023140ANR (Algemeen 26
+ 27)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: De Moortel Kevin\, docent: Mu
+ koko Ntondo Bénit \nroom: E.0.10. room: 91 \nl
+ okaaltype: Leslokaal \nlestype: Werkcollege\nI
+ D 352652
+ATTENDEE;CN="course: Business Management and Entrepreneurship (2627
+ )";CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261028T070000Z
+DTEND:20261028T090000Z
+UID:350883-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Energieconversie 1019082CNR (Algemeen 2627)
+LOCATION:room: P3 instructielokaal
+DESCRIPTION:docent: Bram Svend \nroom: P3 instructi
+ elokaal. room: 38 \nlokaaltype: Seminarielokaal 
+ \nlestype: Hoorcollege\, lestype: Werkcollege\nI
+ D 350883
+ATTENDEE;CN="course: Energieconversie (2627)";CUTYPE=IN
+ DIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261028T080000Z
+DTEND:20261028T110000Z
+UID:350867-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Sterkteleer 1019074BNR (Algemeen 2627)
+LOCATION:room: E.0.10
+DESCRIPTION:docent: Angelis Dimitrios\, docent: Pyl Lincy\, d
+ ocent: Zhu Yifan \nroom: E.0.10. room: 91 \nlokaaltype: Le
+ slokaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 350867
+ATTENDEE;CN="course: Sterkteleer (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:no
+ mail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261028T090000Z
+DTEND:20261028T110000Z
+UID:414294-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Aerodynamica 1019086CNR (Algemeen 2627)
+LOCATION:room: E.0.06
+DESCRIPTION:docent: Schram Christophe \nroom: E.0.06. room: 
+ 62 \nlokaaltype: Leslokaal \nlestype: Hoorcollege\nID 414
+ 294
+ATTENDEE;CN="course: Aerodynamica (2627)";CUTYPE=INDI
+ VIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261029T090000Z
+DTEND:20261029T110000Z
+UID:350865-1537856721-0@timeedit.com
+DTSTAMP:20260930T191908Z
+LAST-MODIFIED:20260930T191908Z
+SUMMARY:student group: Wiskunde voor signa
+ len en systemen 1019070BNR (Algemeen 26
+ 27)
+LOCATION:room: E.0.05
+DESCRIPTION:docent: Braeken An\, docent: Vandervelden Thiba
+ ut Michel J \nroom: E.0.05. room: 100 \nlokaaltype: Lesl
+ okaal \nlestype: Hoorcollege\, lestype: Werkcollege\nID 
+ 350865
+ATTENDEE;CN="course: Wiskunde voor signalen en systemen (2627)";
+ CUTYPE=INDIVIDUAL;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:invalid:nom
+ ail
+END:VEVENT
+END:VCALENDAR
