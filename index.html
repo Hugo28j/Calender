@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mijn Agenda">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Mijn Studie- en Takenagenda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">📚</span>
+      <div>
+        <div class="brand-title">Mijn Agenda</div>
+        <div class="brand-sub">Studie &amp; Taken</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-tab="kalender" onclick="showTab('kalender')"><span>📅</span> Kalender</button>
+      <button class="nav-btn" data-tab="taken" onclick="showTab('taken')"><span>✅</span> Taken &amp; Evenementen</button>
+      <button class="nav-btn" data-tab="beschikbaarheid" onclick="showTab('beschikbaarheid')"><span>🟢</span> Beschikbaarheid</button>
+      <button class="nav-btn" data-tab="kalenders" onclick="showTab('kalenders')"><span>🔄</span> Externe agenda's</button>
+      <button class="nav-btn" data-tab="klasses" onclick="showTab('klasses')"><span>🎨</span> Klasses beheren</button>
+      <button class="nav-btn" data-tab="statistieken" onclick="showTab('statistieken')"><span>📊</span> Statistieken</button>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-widgets">
+      <div class="widget">
+        <div class="widget-title">📌 Vandaag</div>
+        <div id="today-overview"></div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">🌅 Morgen</div>
+        <div id="tomorrow-overview"></div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">⏰ Komende deadlines</div>
+        <div id="upcoming-deadlines"></div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">📊 Studieuren deze week</div>
+        <div id="study-hours"></div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">📅 Studieuren volgende week</div>
+        <div id="study-hours-next"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div id="main-content">
+    <!-- Topbar -->
+    <div class="topbar">
+      <input type="text" id="search-input" placeholder="🔍 Zoeken op titel, beschrijving, klasse..." oninput="searchAndFilter()">
+      <div class="topbar-actions">
+        <button class="btn-primary" onclick="openEventModal()">+ Nieuw item</button>
+        <button class="btn-outline" onclick="enterAvailDrawMode()">🟢 Beschikbaar moment tekenen</button>
+      </div>
+    </div>
+
+    <!-- TAB: KALENDER -->
+    <div id="tab-kalender" class="tab-content active">
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="btn-nav" onclick="prevPeriod()">&#8249; Vorige</button>
+          <button class="btn-today" onclick="goToToday()">Vandaag</button>
+          <button class="btn-nav" onclick="nextPeriod()">Volgende &#8250;</button>
+        </div>
+        <h2 id="calendar-title" class="cal-period-title"></h2>
+        <div class="view-switcher">
+          <button class="view-btn active" data-view="month" onclick="setView('month')">Maand</button>
+          <button class="view-btn" data-view="week" onclick="setView('week')">Week</button>
+          <button class="view-btn" data-view="dag" onclick="setView('dag')">Dag</button>
+        </div>
+      </div>
+      <div id="calendar-container"></div>
+    </div>
+
+    <!-- TAB: TAKEN -->
+    <div id="tab-taken" class="tab-content">
+      <div class="tab-header">
+        <h2>Taken &amp; Evenementen</h2>
+        <button class="btn-primary" onclick="openEventModal()">+ Nieuw item</button>
+      </div>
+      <div class="filter-bar">
+        <select id="filter-klasse" onchange="searchAndFilter()"><option value="">Alle klasses</option></select>
+        <select id="filter-type" onchange="searchAndFilter()">
+          <option value="">Alle types</option>
+          <option>Taak</option><option>Deadline</option><option>Evenement</option>
+          <option>Studieblok</option><option>Les</option><option>Familie</option><option>Andere</option>
+        </select>
+        <select id="filter-status" onchange="searchAndFilter()">
+          <option value="">Alle statussen</option>
+          <option>Nog te doen</option><option>Bezig</option><option>Afgewerkt</option><option>Geannuleerd</option>
+        </select>
+        <select id="filter-prioriteit" onchange="searchAndFilter()">
+          <option value="">Alle prioriteiten</option>
+          <option>Laag</option><option>Normaal</option><option>Hoog</option><option>Dringend</option>
+        </select>
+      </div>
+      <div id="events-list"></div>
+    </div>
+
+    <!-- TAB: BESCHIKBAARHEID -->
+    <div id="tab-beschikbaarheid" class="tab-content">
+      <!-- Lijstweergave -->
+      <div id="avail-list-view">
+        <div class="tab-header">
+          <h2>Beschikbare leermomenten</h2>
+          <button class="btn-primary" onclick="openAvailWeekPicker()">+ Toevoegen</button>
+        </div>
+        <div id="availability-list"></div>
+      </div>
+      <!-- Weekpicker -->
+      <div id="avail-week-picker"></div>
+    </div>
+
+    <!-- TAB: EXTERNE KALENDERS -->
+    <div id="tab-kalenders" class="tab-content">
+      <div class="tab-header">
+        <div>
+          <h2>Externe agenda's</h2>
+          <p class="tab-subtitle">Je VUB-rooster wordt automatisch uit TimeEdit ingelezen.</p>
+        </div>
+        <button class="btn-primary" onclick="refreshExternalCalendars()">🔄 Vernieuwen</button>
+      </div>
+
+      <div class="external-cal-card">
+        <div class="external-cal-main">
+          <div class="external-cal-icon">🎓</div>
+          <div class="external-cal-info">
+            <div class="external-cal-name">VUB TimeEdit</div>
+            <div class="external-cal-meta">Lessen en lokalen uit je publieke VUB-rooster</div>
+            <div id="timeedit-status" class="external-cal-status">Rooster laden…</div>
+          </div>
+        </div>
+        <label class="calendar-toggle">
+          <input type="checkbox" id="timeedit-enabled" checked onchange="toggleTimeEditCalendar(this.checked)">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span>Tonen in kalender</span>
+        </label>
+      </div>
+
+      <div class="external-cal-help">
+        <strong>Hoe werkt dit?</strong>
+        <p>De website leest een lokale kopie van je TimeEdit-feed. GitHub Actions vernieuwt die kopie automatisch en bij het openen probeert de site ook rechtstreeks een actuele versie te laden.</p>
+        <p>TimeEdit-items zijn alleen-lezen. Je eigen taken, deadlines, lessen en beschikbare momenten blijven apart bewerkbaar.</p>
+      </div>
+    </div>
+
+    <!-- TAB: KLASSES -->
+    <div id="tab-klasses" class="tab-content">
+      <div class="tab-header">
+        <h2>Klasses beheren</h2>
+        <button class="btn-primary" onclick="openClassModal()">+ Nieuwe klasse</button>
+      </div>
+      <div id="classes-list"></div>
+    </div>
+
+    <!-- TAB: STATISTIEKEN -->
+    <div id="tab-statistieken" class="tab-content">
+      <div class="tab-header">
+        <h2>Statistieken</h2>
+      </div>
+      <div id="stats-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: EVENT ====== -->
+<div id="event-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="event-modal-title">Nieuw item</h3>
+      <button class="modal-close" onclick="closeEventModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="event-id">
+      <div class="form-group">
+        <label>Titel *</label>
+        <input type="text" id="event-title" placeholder="Bijv. Hoofdstuk 4 oefeningen maken">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="event-type">
+            <option>Taak</option><option>Deadline</option><option>Evenement</option>
+            <option>Studieblok</option><option>Les</option><option>Familie</option><option>Andere</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Klasse</label>
+          <select id="event-class"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startdatum *</label>
+          <input type="date" id="event-start-date">
+        </div>
+        <div class="form-group">
+          <label>Starttijd</label>
+          <input type="time" id="event-start-time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Einddatum</label>
+          <input type="date" id="event-end-date">
+        </div>
+        <div class="form-group">
+          <label>Eindtijd</label>
+          <input type="time" id="event-end-time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prioriteit</label>
+          <select id="event-priority">
+            <option>Normaal</option><option>Laag</option><option>Hoog</option><option>Dringend</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="event-status">
+            <option>Nog te doen</option><option>Bezig</option><option>Afgewerkt</option><option>Geannuleerd</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Beschrijving</label>
+        <textarea id="event-description" rows="3" placeholder="Optionele beschrijving..."></textarea>
+      </div>
+      <div class="avail-hint-box">
+        <button type="button" class="btn-link" onclick="toggleAvailHint()">📅 Toon beschikbare leermomenten</button>
+        <div id="avail-hint-panel" style="display:none">
+          <div class="avail-hint-filter">
+            <label>Minimale duur:</label>
+            <select id="hint-min-dur" onchange="updateAvailHint()">
+              <option value="0">Alles tonen</option>
+              <option value="60">Langer dan 1 uur</option>
+              <option value="90">Langer dan 1,5 uur</option>
+              <option value="120">Langer dan 2 uur</option>
+              <option value="180">Langer dan 3 uur</option>
+            </select>
+          </div>
+          <div id="avail-hint-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeEventModal()">Annuleren</button>
+      <button class="btn-primary" onclick="saveEvent()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: EVENT DETAIL ====== -->
+<div id="event-detail-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="detail-event-title">Detail</h3>
+      <button class="modal-close" onclick="closeEventDetailModal()">×</button>
+    </div>
+    <div class="modal-body" id="event-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeEventDetailModal()">Sluiten</button>
+      <button class="btn-outline" onclick="markEventDone()" id="btn-mark-done">✓ Afgewerkt</button>
+      <button class="btn-outline" onclick="editCurrentEvent()" id="btn-edit-event">✎ Aanpassen</button>
+      <button class="btn-danger" onclick="deleteCurrentEvent()" id="btn-delete-event">🗑 Verwijderen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: AVAILABILITY ====== -->
+<div id="availability-modal" class="modal-overlay" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="avail-modal-title">Beschikbaar leermoment</h3>
+      <button class="modal-close" onclick="closeAvailabilityModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="avail-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startdatum *</label>
+          <input type="date" id="avail-start-date">
+        </div>
+        <div class="form-group">
+          <label>Starttijd *</label>
+          <input type="time" id="avail-start-time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Einddatum *</label>
+          <input type="date" id="avail-end-date">
+        </div>
+        <div class="form-group">
+          <label>Eindtijd *</label>
+          <input type="time" id="avail-end-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Opmerking</label>
+        <input type="text" id="avail-note" placeholder="Bijv. Vrij na de les">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeAvailabilityModal()">Annuleren</button>
+      <button class="btn-primary" onclick="saveAvailability()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: AVAILABILITY DETAIL ====== -->
+<div id="avail-detail-modal" class="modal-overlay" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>📗 Beschikbaar leermoment</h3>
+      <button class="modal-close" onclick="closeAvailDetailModal()">×</button>
+    </div>
+    <div class="modal-body" id="avail-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeAvailDetailModal()">Sluiten</button>
+      <button class="btn-outline" onclick="editCurrentAvail()">✎ Aanpassen</button>
+      <button class="btn-outline" onclick="planAvailAsEvent()">📝 Plannen als taak</button>
+      <button class="btn-primary" onclick="planAndReplaceAvail()">🔄 Vervangen door taak</button>
+      <button class="btn-danger" onclick="deleteCurrentAvail()">🗑 Verwijderen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: CLASS ====== -->
+<div id="class-modal" class="modal-overlay" style="display:none">
+  <div class="modal modal-xs">
+    <div class="modal-header">
+      <h3 id="class-modal-title">Nieuwe klasse</h3>
+      <button class="modal-close" onclick="closeClassModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="class-id">
+      <div class="form-group">
+        <label>Naam *</label>
+        <input type="text" id="class-name" placeholder="Bijv. Wiskunde">
+      </div>
+      <div class="form-group">
+        <label>Kleur</label>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="color" id="class-color" value="#6366F1" style="width:48px; height:36px; border:none; cursor:pointer; border-radius:6px;">
+          <span id="class-color-preview" style="font-size:13px; color:var(--text-muted)">Kies een kleur</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeClassModal()">Annuleren</button>
+      <button class="btn-primary" onclick="saveClass()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
