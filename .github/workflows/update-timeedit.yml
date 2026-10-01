@@ -25,7 +25,7 @@ jobs:
 
       - name: Download current TimeEdit window
         env:
-          TIMEEDIT_URL: https://cloud.timeedit.net/be_vub/web/public/ri626Q99Y29Z2XQ526868926y9Z293022X299X6Q229225426X9X2261Z23Q2Xu6720321uQwX6n96Z94.ics
+          TIMEEDIT_URL: https://cloud.timeedit.net/be_vub/web/public/ri626Q92Y29Z2XQ526862906y9Z293822X499X6Q229592226X9X22163n1X2X96272Q22ZZ2X639uX9Qw56u2662226260.ics
         run: |
           mkdir -p data
           curl --fail --location --retry 3 --retry-delay 3 "$TIMEEDIT_URL" -o /tmp/timeedit-live.ics
