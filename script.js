@@ -16,7 +16,7 @@ let pickerDrag      = null;    // sleep-operatie in de picker
 let externalEvents   = [];      // read-only items uit externe agenda's
 let currentExternalEventId = null;
 let externalCalendarState = { loading: false, loaded: false, error: '', source: '', updatedAt: null };
-const TIMEEDIT_URL = "https://cloud.timeedit.net/be_vub/web/public/ri626Q99Y29Z2XQ526868926y9Z293022X299X6Q229225426X9X2261Z23Q2Xu6720321uQwX6n96Z94.ics";
+const TIMEEDIT_URL = "https://cloud.timeedit.net/be_vub/web/public/ri626Q92Y29Z2XQ526862906y9Z293822X499X6Q229592226X9X22163n1X2X96272Q22ZZ2X639uX9Qw56u2662226260.ics";
 const TIMEEDIT_COLOR = '#7C3AED';
 
 // ── INIT ─────────────────────────────────────────────────────
