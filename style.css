@@ -1480,3 +1480,382 @@ body {
   .topbar { top:88px; }
   .stats-summary-row { grid-template-columns:1fr; }
 }
+
+
+/* ============================================================
+   MOBILE UX V2 — phone-first calendar + touch interactions
+   ============================================================ */
+@media (max-width: 760px) {
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-width: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  #app {
+    width: 100%;
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+
+  #sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: none;
+    overflow: visible;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .sidebar-brand {
+    padding: 8px 12px 4px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 5px 8px 8px;
+  }
+
+  .sidebar-nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 44px;
+    padding: 9px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  #main-content {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  .topbar {
+    position: static !important;
+    top: auto !important;
+    z-index: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  #search-input {
+    order: 1;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .topbar-actions {
+    order: 2;
+    width: 100%;
+    margin-left: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .topbar-actions button,
+  .btn-primary,
+  .btn-outline,
+  .btn-danger,
+  .btn-nav,
+  .btn-today,
+  .view-btn,
+  .avail-picker-close,
+  .avail-draw-exit {
+    min-height: 44px;
+  }
+
+  .tab-content {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    padding: 12px 10px 24px;
+  }
+
+  #tab-kalender {
+    padding: 10px 8px 18px;
+    overflow: visible;
+  }
+
+  .tab-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tab-header > .btn-primary {
+    width: 100%;
+  }
+
+  .cal-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    margin-bottom: 10px;
+  }
+
+  .cal-nav,
+  .view-switcher {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .view-switcher {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .cal-nav button,
+  .view-switcher button {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .cal-period-title {
+    order: -1;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.25;
+  }
+
+  #calendar-container {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Month view fits the phone width instead of forcing a 680px canvas. */
+  .month-day-names,
+  .month-grid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .month-day-names {
+    gap: 2px;
+  }
+
+  .month-day-name {
+    padding: 3px 1px;
+    font-size: 9px;
+  }
+
+  .month-grid {
+    gap: 2px;
+  }
+
+  .month-cell {
+    min-width: 0;
+    min-height: 78px;
+    padding: 4px 2px;
+    border-radius: 6px;
+  }
+
+  .cell-day-num {
+    margin-left: 2px;
+    font-size: 11px;
+  }
+
+  .cal-chip {
+    padding: 2px 2px;
+    font-size: 8px;
+    line-height: 1.25;
+    border-radius: 3px;
+  }
+
+  .cal-more {
+    font-size: 8px;
+    padding-left: 2px;
+  }
+
+  /* Week view remains scrollable horizontally; a full 7-day grid would be too cramped. */
+  .week-outer {
+    min-width: 700px;
+  }
+
+  .week-body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .week-event {
+    min-height: 24px;
+  }
+
+  .day-outer {
+    min-width: 100%;
+  }
+
+  .events-grid,
+  .avail-grid,
+  .classes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .filter-bar select {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="date"],
+  .form-group input[type="time"],
+  .form-group select,
+  .form-group textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .modal-overlay {
+    padding: 6px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: none;
+    max-height: 94dvh;
+    border-radius: 16px 16px 8px 8px;
+  }
+
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .modal-footer > button {
+    flex: 1 1 120px;
+  }
+
+  .avail-picker-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .avail-picker-toolbar .cal-nav {
+    flex: 1 1 100%;
+  }
+
+  .avail-picker-period {
+    flex: 1 1 auto;
+    font-size: 16px;
+  }
+
+  .avail-picker-hint,
+  .avail-draw-banner {
+    font-size: 12px;
+  }
+
+  .avail-draw-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .external-cal-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .calendar-toggle {
+    width: 100%;
+    min-height: 44px;
+    justify-content: space-between;
+  }
+
+  .stats-summary-row,
+  .stats-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-bar-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .stats-bar-hours {
+    text-align: left;
+  }
+}
+
+/* Drawing mode must own the touch gesture; regular calendar scrolling stays untouched. */
+.avail-picker-col,
+.week-day-col.avail-draw-mode {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 480px) {
+  .sidebar-brand {
+    display: none;
+  }
+
+  .sidebar-nav {
+    padding-top: calc(6px + env(safe-area-inset-top));
+  }
+
+  .topbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .month-cell {
+    min-height: 72px;
+  }
+
+  .cal-chip {
+    font-size: 7.5px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .detail-label {
+    min-width: 0;
+  }
+}

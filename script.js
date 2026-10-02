@@ -16,7 +16,7 @@ let pickerDrag      = null;    // sleep-operatie in de picker
 let externalEvents   = [];      // read-only items uit externe agenda's
 let currentExternalEventId = null;
 let externalCalendarState = { loading: false, loaded: false, error: '', source: '', updatedAt: null };
-const TIMEEDIT_URL = "https://cloud.timeedit.net/be_vub/web/public/ri626Q92Y29Z2XQ526862906y9Z293822X499X6Q229592226X9X22163n1X2X96272Q22ZZ2X639uX9Qw56u2662226260.ics";
+const TIMEEDIT_URL = "https://cloud.timeedit.net/be_vub/web/public/ri626Q99Y29Z2XQ526868926y9Z293022X299X6Q229225426X9X2261623Z2X2672w12QQ22X6690X9u5n663Zu.ics";
 const TIMEEDIT_COLOR = '#7C3AED';
 
 // ── INIT ─────────────────────────────────────────────────────
@@ -389,6 +389,9 @@ function startAvailDrag(e, ds) {
   e.stopPropagation();
 
   const col      = e.currentTarget;
+  if (e.pointerId !== undefined && col.setPointerCapture) {
+    try { col.setPointerCapture(e.pointerId); } catch (_) {}
+  }
   const weekBody = document.querySelector('.week-body');
   const bodyRect = weekBody ? weekBody.getBoundingClientRect() : { top: 0 };
   const scrollTop = weekBody ? weekBody.scrollTop : 0;
@@ -598,7 +601,7 @@ function renderWeekView() {
     const ds    = toInputDate(d);
     const items = itemsForDay(ds);
     const totalH = (WEEK_END_H - WEEK_START_H) * HOUR_H;
-    const drawAttr = availDrawMode ? `onmousedown="startAvailDrag(event,'${ds}')"` : '';
+    const drawAttr = availDrawMode ? `onpointerdown="startAvailDrag(event,'${ds}')"` : '';
     html += `<div class="week-day-col${availDrawMode ? ' avail-draw-mode' : ''}" style="min-height:${totalH}px" ${drawAttr}>`;
     hours.forEach(h => {
       const slotClick = availDrawMode ? '' : `onclick="handleWeekSlotClick('${ds}',${h})"`;
@@ -1209,7 +1212,7 @@ function renderAvailWeekPicker() {
     const items = itemsForDay(ds);
     const totalH = (WEEK_END_H - WEEK_START_H) * HOUR_H;
 
-    html += `<div class="week-day-col avail-picker-col" style="min-height:${totalH}px" onmousedown="startPickerDrag(event,'${ds}')">`;
+    html += `<div class="week-day-col avail-picker-col" style="min-height:${totalH}px" onpointerdown="startPickerDrag(event,'${ds}')">`;
     hours.forEach(() => html += `<div class="week-bg-hour"></div>`);
 
     items.forEach(item => {
@@ -1261,6 +1264,9 @@ function startPickerDrag(e, ds) {
   e.preventDefault();
 
   const col      = e.currentTarget;
+  if (e.pointerId !== undefined && col.setPointerCapture) {
+    try { col.setPointerCapture(e.pointerId); } catch (_) {}
+  }
   const body     = document.getElementById('avail-picker-body');
   const bodyRect = body ? body.getBoundingClientRect() : { top: 0 };
   const relY     = (e.clientY - bodyRect.top) + (body ? body.scrollTop : 0);
@@ -1801,13 +1807,25 @@ function clearAllData() {
 }
 
 // ── AVAIL DRAG — DOCUMENT HANDLERS ────────────────────────────
-document.addEventListener('mousemove', e => {
+document.addEventListener('pointermove', e => {
   if (dragAvail)  onAvailDragMove(e);
   if (pickerDrag) onPickerDragMove(e);
-});
-document.addEventListener('mouseup', e => {
+}, { passive: false });
+
+document.addEventListener('pointerup', e => {
   if (dragAvail)  endAvailDrag(e);
   if (pickerDrag) endPickerDrag(e);
+});
+
+document.addEventListener('pointercancel', e => {
+  if (dragAvail) {
+    if (dragAvail.overlay) dragAvail.overlay.remove();
+    dragAvail = null;
+  }
+  if (pickerDrag) {
+    if (pickerDrag.overlay) pickerDrag.overlay.remove();
+    pickerDrag = null;
+  }
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
