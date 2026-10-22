@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── STATE ────────────────────────────────────────────────────
-let appData = { classes: [], events: [], availability: [], weekTasks: [], confidence: {}, hiddenExternalUids: [] };
+let appData = { classes: [], events: [], availability: [], weekTasks: [], confidence: {}, confidenceSubjects: [], hiddenExternalUids: [] };
 let currentView  = 'month';
 let currentDate  = new Date();
 let currentEventId = null;
@@ -29,6 +29,16 @@ async function init() {
   if (!appData.availability) appData.availability = [];
   if (!appData.weekTasks)    appData.weekTasks = [];
   if (!appData.confidence || Array.isArray(appData.confidence)) appData.confidence = {};
+  if (!Array.isArray(appData.confidenceSubjects)) {
+    appData.confidenceSubjects = appData.classes.map(c => ({
+      id: c.id,
+      classId: c.id,
+      name: c.name,
+      color: c.color,
+      collapsed: false
+    }));
+    saveData();
+  }
   if (!Array.isArray(appData.hiddenExternalUids)) appData.hiddenExternalUids = [];
   renderAll();
   await loadExternalCalendars();
@@ -1717,15 +1727,55 @@ function confidenceBand(score) {
   return { key:'strong', label:'Zeer zeker', icon:'🔵', color:'#2563EB' };
 }
 
-function ensureConfidenceSubjectData(classId) {
-  let data = appData.confidence[classId];
+function ensureConfidenceSubjects() {
+  if (!Array.isArray(appData.confidenceSubjects)) {
+    appData.confidenceSubjects = appData.classes.map(c => ({
+      id: c.id,
+      classId: c.id,
+      name: c.name,
+      color: c.color,
+      collapsed: false
+    }));
+  }
+
+  appData.confidenceSubjects = appData.confidenceSubjects
+    .filter(s => s && s.id)
+    .map((s, index) => ({
+      id: s.id,
+      classId: s.classId || null,
+      name: String(s.name || 'Vak'),
+      color: s.color || getClassPalette(index),
+      collapsed: Boolean(s.collapsed)
+    }));
+
+  return appData.confidenceSubjects;
+}
+
+function confidenceSubjectView(subject) {
+  const cls = subject.classId ? classById(subject.classId) : null;
+  return {
+    id: subject.id,
+    classId: subject.classId || null,
+    name: cls?.name || subject.name || 'Vak',
+    color: cls?.color || subject.color || '#6366F1',
+    collapsed: Boolean(subject.collapsed)
+  };
+}
+
+function confidenceSubjectById(subjectId) {
+  ensureConfidenceSubjects();
+  return appData.confidenceSubjects.find(s => s.id === subjectId) || null;
+}
+
+function ensureConfidenceSubjectData(subjectId) {
+  let data = appData.confidence[subjectId];
 
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     data = { parts: [], note: '' };
-    appData.confidence[classId] = data;
+    appData.confidence[subjectId] = data;
   }
 
-  // Migrate the old one-score confidence system without losing the user's value.
+  // Migratie van het oudere systeem met één algemene score.
   if (!Array.isArray(data.parts)) {
     const oldScore = data.score;
     data.parts = [];
@@ -1751,20 +1801,109 @@ function ensureConfidenceSubjectData(classId) {
   return data;
 }
 
-function confidenceMetrics(classId) {
-  const data = ensureConfidenceSubjectData(classId);
+function confidenceMetrics(subjectId) {
+  const data = ensureConfidenceSubjectData(subjectId);
   const parts = data.parts;
   const totalWeight = parts.reduce((sum,p) => sum + Number(p.weight || 0), 0);
   const roundedWeight = Math.round(totalWeight * 100) / 100;
   const validWeight = Math.abs(roundedWeight - 100) < 0.001 && parts.length > 0;
   const weightedPoints = parts.reduce((sum,p) => sum + (Number(p.score || 0) * Number(p.weight || 0) / 100), 0);
   const overall = validWeight ? Math.round(weightedPoints * 10) / 10 : null;
-
   return { data, parts, totalWeight: roundedWeight, validWeight, weightedPoints, overall };
 }
 
-function addConfidencePart(classId) {
-  const { data, totalWeight } = confidenceMetrics(classId);
+function openConfidenceSubjectModal() {
+  ensureConfidenceSubjects();
+  const select = document.getElementById('confidence-subject-class');
+  const usedClassIds = new Set(appData.confidenceSubjects.map(s => s.classId).filter(Boolean));
+  const available = appData.classes.filter(c => !usedClassIds.has(c.id));
+
+  select.innerHTML = '<option value="">— Eigen vak —</option>' +
+    available.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+
+  document.getElementById('confidence-subject-name').value = '';
+  document.getElementById('confidence-subject-color').value = getClassPalette(appData.confidenceSubjects.length);
+  document.getElementById('confidence-subject-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('confidence-subject-name')?.focus(), 30);
+}
+
+function closeConfidenceSubjectModal() {
+  document.getElementById('confidence-subject-modal').style.display = 'none';
+}
+
+function confidenceSubjectClassChanged() {
+  const classId = document.getElementById('confidence-subject-class').value;
+  const cls = classById(classId);
+  if (!cls) return;
+  document.getElementById('confidence-subject-name').value = cls.name;
+  document.getElementById('confidence-subject-color').value = cls.color;
+}
+
+function saveConfidenceSubject() {
+  ensureConfidenceSubjects();
+
+  const classId = document.getElementById('confidence-subject-class').value || null;
+  const cls = classId ? classById(classId) : null;
+  const name = document.getElementById('confidence-subject-name').value.trim();
+  const color = document.getElementById('confidence-subject-color').value || '#6366F1';
+
+  if (!name) {
+    alert('Geef het vak een naam.');
+    return;
+  }
+
+  if (classId && appData.confidenceSubjects.some(s => s.classId === classId)) {
+    alert('Dit vak staat al in Vak-confidence.');
+    return;
+  }
+
+  const id = classId || genId('confsubject');
+  appData.confidenceSubjects.push({
+    id,
+    classId,
+    name: cls?.name || name,
+    color: cls?.color || color,
+    collapsed: false
+  });
+
+  // Als een klasse eerder uit Confidence verwijderd werd, blijft de oude confidence-data
+  // onder hetzelfde class-id bestaan en verschijnt ze nu automatisch terug.
+  ensureConfidenceSubjectData(id);
+
+  saveData();
+  closeConfidenceSubjectModal();
+  renderConfidence();
+  renderConfidenceWarning();
+}
+
+function removeConfidenceSubject(subjectId) {
+  const subject = confidenceSubjectById(subjectId);
+  if (!subject) return;
+  const view = confidenceSubjectView(subject);
+
+  if (!confirm(`"${view.name}" uit Vak-confidence verwijderen?\n\nDit verwijdert het vak niet uit je kalender of uit Klasses beheren.`)) return;
+
+  appData.confidenceSubjects = appData.confidenceSubjects.filter(s => s.id !== subjectId);
+
+  // Voor een volledig apart confidence-vak verwijderen we ook de bijbehorende data.
+  // Voor een gekoppelde klasse bewaren we de data zodat opnieuw toevoegen niets verliest.
+  if (!subject.classId) delete appData.confidence[subjectId];
+
+  saveData();
+  renderConfidence();
+  renderConfidenceWarning();
+}
+
+function toggleConfidenceSubject(subjectId) {
+  const subject = confidenceSubjectById(subjectId);
+  if (!subject) return;
+  subject.collapsed = !subject.collapsed;
+  saveData();
+  renderConfidence();
+}
+
+function addConfidencePart(subjectId) {
+  const { data, totalWeight } = confidenceMetrics(subjectId);
   const remaining = Math.max(0, Math.round((100 - totalWeight) * 100) / 100);
   data.parts.push({
     id: genId('confpart'),
@@ -1778,8 +1917,8 @@ function addConfidencePart(classId) {
   renderConfidenceWarning();
 }
 
-function deleteConfidencePart(classId, partId) {
-  const data = ensureConfidenceSubjectData(classId);
+function deleteConfidencePart(subjectId, partId) {
+  const data = ensureConfidenceSubjectData(subjectId);
   const part = data.parts.find(p => p.id === partId);
   if (!part) return;
   if (!confirm(`Confidence-deel "${part.name}" verwijderen?`)) return;
@@ -1790,8 +1929,8 @@ function deleteConfidencePart(classId, partId) {
   renderConfidenceWarning();
 }
 
-function updateConfidencePart(classId, partId, field, value) {
-  const data = ensureConfidenceSubjectData(classId);
+function updateConfidencePart(subjectId, partId, field, value) {
+  const data = ensureConfidenceSubjectData(subjectId);
   const part = data.parts.find(p => p.id === partId);
   if (!part) return;
 
@@ -1809,11 +1948,29 @@ function updateConfidencePart(classId, partId, field, value) {
   renderConfidenceWarning();
 }
 
-function saveConfidenceNote(classId, value) {
-  const data = ensureConfidenceSubjectData(classId);
+function saveConfidenceNote(subjectId, value) {
+  const data = ensureConfidenceSubjectData(subjectId);
   data.note = String(value || '').trim();
   data.updatedAt = new Date().toISOString();
   saveData();
+}
+
+function getConfidenceItems() {
+  ensureConfidenceSubjects();
+
+  return appData.confidenceSubjects.map(subject => {
+    const view = confidenceSubjectView(subject);
+    const metrics = confidenceMetrics(subject.id);
+    return {
+      subject,
+      view,
+      data: metrics.data,
+      parts: metrics.parts,
+      totalWeight: metrics.totalWeight,
+      validWeight: metrics.validWeight,
+      score: metrics.overall
+    };
+  });
 }
 
 function renderConfidenceAlert(items) {
@@ -1823,8 +1980,14 @@ function renderConfidenceAlert(items) {
   const incomplete = items.filter(x => !x.validWeight);
   const low = items.filter(x => x.validWeight && x.score !== null && x.score < 50);
 
-  if (low.length) {
-    const worst = low.slice(0,3).map(x => `${escapeHtml(x.cls.name)} ${x.score}%`).join(' · ');
+  if (!items.length) {
+    alert.innerHTML = `<div class="confidence-alert unset">
+      <div class="confidence-alert-icon">➕</div>
+      <div><strong>Nog geen confidence-vakken</strong>
+      <div>Voeg alleen de echte schoolvakken toe waarvoor je je voortgang wilt volgen.</div></div>
+    </div>`;
+  } else if (low.length) {
+    const worst = low.slice(0,3).map(x => `${escapeHtml(x.view.name)} ${x.score}%`).join(' · ');
     alert.innerHTML = `<div class="confidence-alert critical">
       <div class="confidence-alert-icon">🚨</div>
       <div><strong>${low.length} vak${low.length === 1 ? '' : 'ken'} onder 50% gewogen confidence</strong>
@@ -1839,7 +2002,7 @@ function renderConfidenceAlert(items) {
   } else {
     alert.innerHTML = `<div class="confidence-alert good">
       <div class="confidence-alert-icon">✅</div>
-      <div><strong>Geen confidence-alarm</strong><div>Alle vakken zijn volledig gewogen en staan momenteel op minstens 50%.</div></div>
+      <div><strong>Geen confidence-alarm</strong><div>Alle confidence-vakken zijn volledig gewogen en staan momenteel op minstens 50%.</div></div>
     </div>`;
   }
 }
@@ -1848,34 +2011,30 @@ function renderConfidence() {
   const cont = document.getElementById('confidence-list');
   if (!cont) return;
 
-  const items = appData.classes.map(cls => {
-    const metrics = confidenceMetrics(cls.id);
-    return {
-      cls,
-      data: metrics.data,
-      parts: metrics.parts,
-      totalWeight: metrics.totalWeight,
-      validWeight: metrics.validWeight,
-      score: metrics.overall
-    };
-  }).sort((a,b) => {
+  const items = getConfidenceItems().sort((a,b) => {
     if (a.validWeight && b.validWeight) return a.score - b.score;
     if (a.validWeight) return -1;
     if (b.validWeight) return 1;
-    return a.cls.name.localeCompare(b.cls.name, 'nl');
+    return a.view.name.localeCompare(b.view.name, 'nl');
   });
 
   renderConfidenceAlert(items);
 
   if (!items.length) {
-    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🚨</div><div class="empty-state-title">Nog geen vakken</div><div class="empty-state-sub">Maak eerst je vakken aan bij Klasses beheren.</div></div>';
+    cont.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">🎓</div>
+      <div class="empty-state-title">Geen vakken in Confidence</div>
+      <div class="empty-state-sub">Voeg alleen schoolvakken toe. Dingen zoals Familie hoeven hier dus niet te staan.</div>
+      <button class="btn-primary confidence-empty-add" onclick="openConfidenceSubjectModal()">+ Vak toevoegen</button>
+    </div>`;
     return;
   }
 
   cont.innerHTML = '<div class="confidence-subject-list">' + items.map(item => {
-    const { cls, data, parts, totalWeight, validWeight, score } = item;
+    const { subject, view, data, parts, totalWeight, validWeight, score } = item;
     const band = validWeight ? confidenceBand(score) : null;
     const remaining = Math.round((100 - totalWeight) * 100) / 100;
+    const isCollapsed = Boolean(subject.collapsed);
 
     const weightMessage = validWeight
       ? '<span class="confidence-weight-ok">✓ Examengewicht = 100%</span>'
@@ -1890,7 +2049,7 @@ function renderConfidence() {
           return `<div class="confidence-part-row">
             <div class="confidence-part-name-wrap">
               <input class="confidence-part-name" type="text" value="${escapeHtml(part.name)}"
-                onchange="updateConfidencePart('${cls.id}','${part.id}','name',this.value)"
+                onchange="updateConfidencePart('${subject.id}','${part.id}','name',this.value)"
                 aria-label="Naam onderdeel">
             </div>
             <div class="confidence-part-score">
@@ -1898,9 +2057,9 @@ function renderConfidence() {
               <div class="confidence-part-score-line">
                 <input type="range" min="0" max="100" step="1" value="${part.score}"
                   oninput="this.nextElementSibling.value=this.value"
-                  onchange="updateConfidencePart('${cls.id}','${part.id}','score',this.value)">
+                  onchange="updateConfidencePart('${subject.id}','${part.id}','score',this.value)">
                 <input type="number" min="0" max="100" step="1" value="${part.score}"
-                  onchange="updateConfidencePart('${cls.id}','${part.id}','score',this.value)">
+                  onchange="updateConfidencePart('${subject.id}','${part.id}','score',this.value)">
                 <span>%</span>
               </div>
               <div class="confidence-part-band ${pBand.key}">${pBand.icon} ${pBand.label}</div>
@@ -1909,54 +2068,60 @@ function renderConfidence() {
               <div class="confidence-part-label">Op examen</div>
               <div class="confidence-weight-input">
                 <input type="number" min="0" max="100" step="1" value="${part.weight}"
-                  onchange="updateConfidencePart('${cls.id}','${part.id}','weight',this.value)">
+                  onchange="updateConfidencePart('${subject.id}','${part.id}','weight',this.value)">
                 <span>%</span>
               </div>
               <div class="confidence-contribution">→ ${contribution} punt${contribution === 1 ? '' : 'en'} confidence</div>
             </div>
-            <button class="confidence-part-delete" onclick="deleteConfidencePart('${cls.id}','${part.id}')" title="Deel verwijderen">×</button>
+            <button class="confidence-part-delete" onclick="deleteConfidencePart('${subject.id}','${part.id}')" title="Deel verwijderen">×</button>
           </div>`;
         }).join('')
       : '<div class="confidence-no-parts">Nog geen delen. Voeg bijvoorbeeld “Theorie”, “Hoofdstuk 1” of “Oefeningen” toe.</div>';
 
-    return `<section class="confidence-subject-card" data-class-id="${cls.id}">
-      <div class="confidence-subject-head">
-        <div>
-          <div class="confidence-subject-title"><span style="background:${cls.color}"></span>${escapeHtml(cls.name)}</div>
-          <div class="confidence-subject-weight">${weightMessage} · totaal ${totalWeight}%</div>
+    return `<section class="confidence-subject-card${isCollapsed ? ' collapsed' : ''}" data-subject-id="${subject.id}">
+      <div class="confidence-subject-head confidence-subject-toggle" onclick="toggleConfidenceSubject('${subject.id}')">
+        <div class="confidence-subject-heading-main">
+          <button class="confidence-chevron" aria-label="${isCollapsed ? 'Openklappen' : 'Dichtklappen'}" title="${isCollapsed ? 'Openklappen' : 'Dichtklappen'}">${isCollapsed ? '›' : '⌄'}</button>
+          <div>
+            <div class="confidence-subject-title"><span style="background:${view.color}"></span>${escapeHtml(view.name)}</div>
+            <div class="confidence-subject-weight">${weightMessage} · totaal ${totalWeight}%</div>
+          </div>
         </div>
-        <div class="confidence-overall ${validWeight ? band.key : 'unset'}">
-          <span class="confidence-overall-label">Gewogen score</span>
-          <strong>${validWeight ? score + '%' : '—'}</strong>
-          <small>${validWeight ? band.icon + ' ' + band.label : 'Eerst gewichten naar 100%'}</small>
+
+        <div class="confidence-head-actions">
+          <div class="confidence-overall ${validWeight ? band.key : 'unset'}">
+            <span class="confidence-overall-label">Gewogen score</span>
+            <strong>${validWeight ? score + '%' : '—'}</strong>
+            <small>${validWeight ? band.icon + ' ' + band.label : 'Eerst gewichten naar 100%'}</small>
+          </div>
+          <button class="confidence-remove-subject" onclick="event.stopPropagation();removeConfidenceSubject('${subject.id}')" title="Vak uit Confidence verwijderen">🗑</button>
         </div>
       </div>
 
-      <div class="confidence-parts">
-        ${partRows}
-      </div>
+      <div class="confidence-subject-body"${isCollapsed ? ' style="display:none"' : ''}>
+        <div class="confidence-parts">
+          ${partRows}
+        </div>
 
-      <div class="confidence-subject-actions">
-        <button class="btn-outline confidence-add-part" onclick="addConfidencePart('${cls.id}')">+ Deel toevoegen</button>
-      </div>
+        <div class="confidence-subject-actions">
+          <button class="btn-outline confidence-add-part" onclick="addConfidencePart('${subject.id}')">+ Deel toevoegen</button>
+        </div>
 
-      <label class="confidence-note-label">Algemene notitie voor dit vak</label>
-      <textarea class="confidence-note" rows="2" placeholder="Bijv. hoofdstuk 5 eerst herhalen"
-        onchange="saveConfidenceNote('${cls.id}',this.value)">${escapeHtml(data.note || '')}</textarea>
+        <label class="confidence-note-label">Algemene notitie voor dit vak</label>
+        <textarea class="confidence-note" rows="2" placeholder="Bijv. hoofdstuk 5 eerst herhalen"
+          onchange="saveConfidenceNote('${subject.id}',this.value)">${escapeHtml(data.note || '')}</textarea>
+      </div>
     </section>`;
   }).join('') + '</div>';
 
-  saveData(); // also persists any old-score migration done by ensureConfidenceSubjectData()
+  saveData();
 }
 
 function renderConfidenceWarning() {
   const cont = document.getElementById('confidence-warning');
   if (!cont) return;
 
-  const items = appData.classes.map(cls => {
-    const metrics = confidenceMetrics(cls.id);
-    return { cls, score: metrics.overall, validWeight: metrics.validWeight, totalWeight: metrics.totalWeight };
-  });
+  const items = getConfidenceItems();
 
   const low = items
     .filter(x => x.validWeight && x.score < 50)
@@ -1964,9 +2129,11 @@ function renderConfidenceWarning() {
 
   const incomplete = items.filter(x => !x.validWeight);
 
-  if (low.length) {
+  if (!items.length) {
+    cont.innerHTML = '<div class="widget-empty">Geen confidence-vakken ingesteld</div>';
+  } else if (low.length) {
     cont.innerHTML = low.slice(0,3).map(x => `<div class="widget-item" onclick="showTab('confidence')">
-      <div class="widget-item-title"><span class="confidence-mini-dot"></span>${escapeHtml(x.cls.name)}</div>
+      <div class="widget-item-title"><span class="confidence-mini-dot"></span>${escapeHtml(x.view.name)}</div>
       <div class="widget-item-meta">${x.score}% · ${confidenceBand(x.score).label}</div>
     </div>`).join('') + (low.length > 3 ? `<div class="widget-empty">+${low.length-3} meer</div>` : '');
   } else if (incomplete.length) {
@@ -2025,13 +2192,27 @@ function saveClass() {
 
 function deleteClass(id) {
   if (!confirm('Klasse verwijderen? Items behouden hun data maar verliezen de klasse-koppeling.')) return;
+
+  const cls = appData.classes.find(c => c.id === id);
+  ensureConfidenceSubjects();
+
+  // Als dit vak ook in Confidence staat, maak het daar zelfstandig in plaats van het mee te verwijderen.
+  appData.confidenceSubjects.forEach(s => {
+    if (s.classId === id) {
+      s.classId = null;
+      s.name = cls?.name || s.name;
+      s.color = cls?.color || s.color;
+    }
+  });
+
   appData.classes = appData.classes.filter(c => c.id !== id);
   appData.events.forEach(e => { if (e.classId === id) e.classId = null; });
   appData.weekTasks.forEach(t => { if (t.classId === id) t.classId = null; });
-  if (appData.confidence[id]) delete appData.confidence[id];
+
   saveData();
   renderClassesList();
   renderCalendar();
+  renderConfidenceWarning();
 }
 
 function renderClassesList() {
@@ -2442,7 +2623,7 @@ document.addEventListener('change', e => {
 function clearAllData() {
   if (!confirm('⚠️ Alle data verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
   localStorage.removeItem('studieAgenda_v2');
-  appData = { classes:[], events:[], availability:[], weekTasks:[], confidence:{}, hiddenExternalUids:[] };
+  appData = { classes:[], events:[], availability:[], weekTasks:[], confidence:{}, confidenceSubjects:[], hiddenExternalUids:[] };
   initDefaultClasses();
   renderAll();
 }

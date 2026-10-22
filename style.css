@@ -2553,3 +2553,116 @@ body {
     font-size: 16px;
   }
 }
+
+
+/* ============================================================
+   CONFIDENCE V3 — VAKKEN BEHEREN + IN/UITKLAPPEN
+   ============================================================ */
+.confidence-subject-color-input {
+  width: 64px;
+  height: 42px;
+  padding: 2px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.field-help {
+  margin-top: 5px;
+  color: var(--text-3);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.confidence-subject-toggle {
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+  margin: -16px -16px 0;
+  padding: 16px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.confidence-subject-toggle:hover {
+  background: #FAFAF8;
+}
+
+.confidence-subject-card.collapsed .confidence-subject-toggle {
+  border-bottom: 0;
+  border-radius: var(--radius);
+}
+
+.confidence-subject-heading-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.confidence-chevron {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-2);
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.confidence-head-actions {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.confidence-remove-subject {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1px solid #FECACA;
+  border-radius: 9px;
+  background: #FEF2F2;
+  color: #B91C1C;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.confidence-remove-subject:hover {
+  background: #FEE2E2;
+}
+
+.confidence-subject-body {
+  padding-top: 1px;
+}
+
+.confidence-empty-add {
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+  .confidence-subject-toggle {
+    gap: 10px;
+  }
+
+  .confidence-head-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .confidence-overall {
+    flex: 1;
+  }
+
+  .confidence-remove-subject {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .confidence-subject-heading-main {
+    width: 100%;
+  }
+}
