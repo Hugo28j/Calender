@@ -3,11 +3,13 @@
    ============================================================ */
 
 // ── STATE ────────────────────────────────────────────────────
-let appData = { classes: [], events: [], availability: [] };
+let appData = { classes: [], events: [], availability: [], weekTasks: [], confidence: {} };
 let currentView  = 'month';
 let currentDate  = new Date();
 let currentEventId = null;
 let currentAvailId = null;
+let currentWeekTaskId = null;
+let weekPlanDate = new Date();
 let availDrawMode  = false;   // tekenmodus voor beschikbaarheid
 let dragAvail      = null;    // actieve sleep-operatie
 let replaceAvailId = null;    // avail-id om te vervangen bij opslaan event
@@ -25,6 +27,8 @@ async function init() {
   if (!appData.classes || appData.classes.length === 0) initDefaultClasses();
   if (!appData.events)       appData.events = [];
   if (!appData.availability) appData.availability = [];
+  if (!appData.weekTasks)    appData.weekTasks = [];
+  if (!appData.confidence || Array.isArray(appData.confidence)) appData.confidence = {};
   renderAll();
   await loadExternalCalendars();
   renderAll();
@@ -117,7 +121,7 @@ function eventColor(ev) {
   const cls = classById(ev.classId);
   if (cls) return cls.color;
   const map = { Taak:'#6366F1', Deadline:'#EF4444', Evenement:'#F59E0B',
-                Studieblok:'#3B82F6', Les:'#8B5CF6', Familie:'#F97316', Sport:'#0EA5E9', Andere:'#6B7280' };
+                Studieblok:'#3B82F6', Les:'#8B5CF6', Familie:'#F97316', Sport:'#0EA5E9', Weektaak:'#0F766E', Andere:'#6B7280' };
   return map[ev.type] || '#6366F1';
 }
 
@@ -145,6 +149,23 @@ function itemsForDay(dateStr) {
     if (s < dEnd && n > dStart) out.push({ ...a, _avail: true, type: 'Beschikbaar' });
   });
 
+  appData.weekTasks.forEach(t => {
+    if (!t.scheduledStart) return;
+    const s = new Date(t.scheduledStart);
+    const n = t.scheduledEnd ? new Date(t.scheduledEnd) : new Date(s.getTime() + Number(t.plannedHours || 1) * 3600e3);
+    if (s < dEnd && n > dStart) {
+      out.push({
+        ...t,
+        title: (t.done ? '✓ ' : '☐ ') + t.title,
+        start: t.scheduledStart,
+        end: t.scheduledEnd || localDateTimeAfterHours(t.scheduledStart, Number(t.plannedHours || 1)),
+        type: 'Weektaak',
+        status: t.done ? 'Afgewerkt' : 'Nog te doen',
+        _weekTask: true
+      });
+    }
+  });
+
   if (isTimeEditEnabled()) {
     externalEvents.forEach(e => {
       const s = new Date(e.start);
@@ -163,6 +184,8 @@ function showTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${name}"]`).classList.add('active');
   if (name === 'taken')           renderEventsList();
+  if (name === 'weekplan')        renderWeekPlan();
+  if (name === 'confidence')      renderConfidence();
   if (name === 'beschikbaarheid') renderAvailabilityList();
   if (name === 'kalenders')         renderExternalCalendars();
   if (name === 'klasses')         renderClassesList();
@@ -181,6 +204,7 @@ function toggleTimeEditCalendar(enabled) {
 }
 
 function itemOpenAction(item) {
+  if (item._weekTask) return 'openWeekTaskDetail';
   if (item._avail) return 'openAvailDetail';
   if (item._external) return 'openExternalEventDetail';
   return 'openEventDetail';
@@ -1341,6 +1365,452 @@ function endPickerDrag(e) {
   renderAvailWeekPicker();
 }
 
+// ── WEEKCHECKLIST ─────────────────────────────────────────────
+function weekStartStr(date = weekPlanDate) {
+  return toInputDate(getMonday(date));
+}
+
+function weekEndDateFromStart(weekStart) {
+  const d = new Date(weekStart + 'T12:00');
+  d.setDate(d.getDate() + 6);
+  return d;
+}
+
+function localDateTimeAfterHours(startStr, hours) {
+  const d = new Date(startStr);
+  d.setMinutes(d.getMinutes() + Math.round(Number(hours || 0) * 60));
+  return `${toInputDate(d)}T${toInputTime(d)}`;
+}
+
+function formatWeekRange(weekStart) {
+  const s = new Date(weekStart + 'T12:00');
+  const e = weekEndDateFromStart(weekStart);
+  const a = s.toLocaleDateString('nl-BE', { day:'numeric', month:'long' });
+  const b = e.toLocaleDateString('nl-BE', { day:'numeric', month:'long', year:'numeric' });
+  return `${a} – ${b}`;
+}
+
+function weekPlanPrev() {
+  weekPlanDate = new Date(getMonday(weekPlanDate).getTime() - 7 * 864e5);
+  renderWeekPlan();
+}
+
+function weekPlanNext() {
+  weekPlanDate = new Date(getMonday(weekPlanDate).getTime() + 7 * 864e5);
+  renderWeekPlan();
+}
+
+function weekPlanToday() {
+  weekPlanDate = new Date();
+  renderWeekPlan();
+}
+
+function populateWeekTaskClassSelect(selected = '') {
+  const sel = document.getElementById('week-task-class');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Geen vak —</option>' +
+    appData.classes.map(c => `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${escapeHtml(c.name)}</option>`).join('');
+}
+
+function toggleWeekTaskScheduleFields() {
+  const checked = document.getElementById('week-task-schedule-toggle')?.checked;
+  const fields = document.getElementById('week-task-schedule-fields');
+  if (fields) fields.style.display = checked ? 'block' : 'none';
+}
+
+function openWeekTaskModal(id = null) {
+  const titleEl = document.getElementById('week-task-modal-title');
+  const weekStartInput = document.getElementById('week-task-week-start');
+  let task = null;
+
+  if (id) task = appData.weekTasks.find(t => t.id === id) || null;
+  const ws = task?.weekStart || weekStartStr();
+
+  titleEl.textContent = task ? 'Weektaak aanpassen' : 'Nieuwe weektaak';
+  document.getElementById('week-task-id').value = task?.id || '';
+  weekStartInput.value = ws;
+  document.getElementById('week-task-title').value = task?.title || '';
+  document.getElementById('week-task-hours').value = task?.plannedHours ?? 1;
+  document.getElementById('week-task-note').value = task?.note || '';
+  populateWeekTaskClassSelect(task?.classId || '');
+
+  const hasSchedule = Boolean(task?.scheduledStart);
+  document.getElementById('week-task-schedule-toggle').checked = hasSchedule;
+  document.getElementById('week-task-date').value = hasSchedule ? toInputDate(task.scheduledStart) : '';
+  document.getElementById('week-task-time').value = hasSchedule ? toInputTime(task.scheduledStart) : '18:00';
+
+  const weekEnd = weekEndDateFromStart(ws);
+  const dateInput = document.getElementById('week-task-date');
+  dateInput.min = ws;
+  dateInput.max = toInputDate(weekEnd);
+
+  toggleWeekTaskScheduleFields();
+  document.getElementById('week-task-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('week-task-title')?.focus(), 30);
+}
+
+function closeWeekTaskModal() {
+  document.getElementById('week-task-modal').style.display = 'none';
+}
+
+function saveWeekTask() {
+  const id = document.getElementById('week-task-id').value;
+  const title = document.getElementById('week-task-title').value.trim();
+  const classId = document.getElementById('week-task-class').value || null;
+  const plannedHours = Number(document.getElementById('week-task-hours').value);
+  const weekStart = document.getElementById('week-task-week-start').value || weekStartStr();
+  const note = document.getElementById('week-task-note').value.trim();
+  const schedule = document.getElementById('week-task-schedule-toggle').checked;
+
+  if (!title) { alert('Geef de weektaak een titel.'); return; }
+  if (!Number.isFinite(plannedHours) || plannedHours <= 0) { alert('Geef een geldige geplande tijd in.'); return; }
+
+  let scheduledStart = null;
+  let scheduledEnd = null;
+
+  if (schedule) {
+    const date = document.getElementById('week-task-date').value;
+    const time = document.getElementById('week-task-time').value;
+    if (!date || !time) { alert('Kies een dag en starttijd voor de kalender.'); return; }
+
+    const endWeek = toInputDate(weekEndDateFromStart(weekStart));
+    if (date < weekStart || date > endWeek) {
+      alert('Kies een datum binnen de gekozen week.');
+      return;
+    }
+
+    scheduledStart = `${date}T${time}`;
+    scheduledEnd = localDateTimeAfterHours(scheduledStart, plannedHours);
+  }
+
+  if (id) {
+    const task = appData.weekTasks.find(t => t.id === id);
+    if (!task) return;
+    Object.assign(task, { title, classId, plannedHours, weekStart, note, scheduledStart, scheduledEnd });
+  } else {
+    appData.weekTasks.push({
+      id: genId('week'),
+      title,
+      classId,
+      plannedHours,
+      weekStart,
+      note,
+      scheduledStart,
+      scheduledEnd,
+      done: false,
+      completedAt: null,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  saveData();
+  closeWeekTaskModal();
+  renderAll();
+}
+
+function toggleWeekTaskDone(id) {
+  const task = appData.weekTasks.find(t => t.id === id);
+  if (!task) return;
+  task.done = !task.done;
+  task.completedAt = task.done ? new Date().toISOString() : null;
+  saveData();
+  renderAll();
+
+  if (document.getElementById('week-task-detail-modal')?.style.display === 'flex' && currentWeekTaskId === id) {
+    openWeekTaskDetail(id);
+  }
+}
+
+function deleteWeekTask(id) {
+  const task = appData.weekTasks.find(t => t.id === id);
+  if (!task) return;
+  if (!confirm(`Weektaak "${task.title}" verwijderen?`)) return;
+  appData.weekTasks = appData.weekTasks.filter(t => t.id !== id);
+  saveData();
+  renderAll();
+}
+
+function openWeekTaskDetail(id) {
+  const task = appData.weekTasks.find(t => t.id === id);
+  if (!task) return;
+  currentWeekTaskId = id;
+  const cls = classById(task.classId);
+  const col = cls?.color || '#0F766E';
+
+  document.getElementById('week-task-detail-title').innerHTML =
+    `<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${col};margin-right:8px"></span>${escapeHtml(task.title)}`;
+
+  document.getElementById('week-task-detail-body').innerHTML = `
+    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${task.done ? '✅ Afgewerkt' : '⬜ Nog te doen'}</span></div>
+    <div class="detail-row"><span class="detail-label">Week</span><span class="detail-value">${formatWeekRange(task.weekStart)}</span></div>
+    <div class="detail-row"><span class="detail-label">Vak</span><span class="detail-value">${cls ? escapeHtml(cls.name) : 'Geen vak'}</span></div>
+    <div class="detail-row"><span class="detail-label">Gepland</span><span class="detail-value">${fmtHours(Number(task.plannedHours || 0))}</span></div>
+    ${task.scheduledStart ? `<div class="detail-row"><span class="detail-label">Kalender</span><span class="detail-value">${fmtDate(task.scheduledStart)} · ${fmtTime(task.scheduledStart)} – ${fmtTime(task.scheduledEnd)}</span></div>` : '<div class="detail-row"><span class="detail-label">Kalender</span><span class="detail-value">Nog niet ingepland</span></div>'}
+    ${task.note ? `<div class="detail-desc">${escapeHtml(task.note)}</div>` : ''}
+  `;
+
+  const toggle = document.getElementById('week-task-detail-toggle');
+  toggle.textContent = task.done ? '↩ Terug openzetten' : '✓ Afvinken';
+  toggle.className = task.done ? 'btn-outline' : 'btn-primary';
+  document.getElementById('week-task-detail-modal').style.display = 'flex';
+}
+
+function closeWeekTaskDetail() {
+  document.getElementById('week-task-detail-modal').style.display = 'none';
+  currentWeekTaskId = null;
+}
+
+function toggleCurrentWeekTaskDone() {
+  if (!currentWeekTaskId) return;
+  const id = currentWeekTaskId;
+  toggleWeekTaskDone(id);
+}
+
+function editCurrentWeekTask() {
+  if (!currentWeekTaskId) return;
+  const id = currentWeekTaskId;
+  closeWeekTaskDetail();
+  openWeekTaskModal(id);
+}
+
+function deleteCurrentWeekTask() {
+  if (!currentWeekTaskId) return;
+  const id = currentWeekTaskId;
+  closeWeekTaskDetail();
+  deleteWeekTask(id);
+}
+
+function renderWeekPlan() {
+  const period = document.getElementById('weekplan-period');
+  const summary = document.getElementById('weekplan-summary');
+  const list = document.getElementById('weekplan-list');
+  if (!period || !summary || !list) return;
+
+  const ws = weekStartStr();
+  period.textContent = formatWeekRange(ws);
+
+  const tasks = appData.weekTasks
+    .filter(t => t.weekStart === ws)
+    .sort((a,b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      if (a.scheduledStart && b.scheduledStart) return new Date(a.scheduledStart) - new Date(b.scheduledStart);
+      if (a.scheduledStart) return -1;
+      if (b.scheduledStart) return 1;
+      return String(a.title).localeCompare(String(b.title), 'nl');
+    });
+
+  const planned = tasks.reduce((s,t) => s + Number(t.plannedHours || 0), 0);
+  const doneHours = tasks.filter(t => t.done).reduce((s,t) => s + Number(t.plannedHours || 0), 0);
+  const doneCount = tasks.filter(t => t.done).length;
+  const pct = planned > 0 ? Math.round(doneHours / planned * 100) : 0;
+
+  const currentWs = weekStartStr(new Date());
+  const overdue = ws === currentWs
+    ? appData.weekTasks.filter(t => !t.done && t.weekStart < currentWs)
+    : [];
+
+  summary.innerHTML = `
+    ${overdue.length ? `<div class="weekplan-overdue">⚠️ <strong>${overdue.length} open weekta${overdue.length === 1 ? 'ak' : 'ken'} uit vorige weken.</strong> Kijk terug naar eerdere weken om ze af te werken of te verplaatsen.</div>` : ''}
+    <div class="weekplan-summary-grid">
+      <div class="weekplan-stat"><span>${tasks.length}</span><small>taken deze week</small></div>
+      <div class="weekplan-stat"><span>${doneCount}/${tasks.length}</span><small>afgevinkt</small></div>
+      <div class="weekplan-stat"><span>${fmtHours(planned)}</span><small>gepland</small></div>
+      <div class="weekplan-stat"><span>${fmtHours(doneHours)}</span><small>afgerond</small></div>
+    </div>
+    <div class="weekplan-progress"><div class="weekplan-progress-fill" style="width:${pct}%"></div></div>
+    <div class="weekplan-progress-label">${pct}% van je geplande uren afgevinkt</div>
+  `;
+
+  if (!tasks.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">☑️</div>
+      <div class="empty-state-title">Nog geen weektaken</div>
+      <div class="empty-state-sub">Voeg toe wat je tegen het einde van deze week gedaan wilt hebben.</div>
+      <button class="btn-primary weekplan-empty-btn" onclick="openWeekTaskModal()">+ Eerste weektaak</button>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = '<div class="weektask-list">' + tasks.map(task => {
+    const cls = classById(task.classId);
+    const col = cls?.color || '#0F766E';
+    const when = task.scheduledStart
+      ? `📅 ${fmtDate(task.scheduledStart)} · ${fmtTime(task.scheduledStart)}–${fmtTime(task.scheduledEnd)}`
+      : '📅 Nog niet in kalender geplaatst';
+    return `<div class="weektask-card${task.done ? ' done' : ''}" style="border-left-color:${col}">
+      <button class="weektask-check" onclick="toggleWeekTaskDone('${task.id}')" aria-label="Taak afvinken">${task.done ? '✓' : ''}</button>
+      <div class="weektask-main" onclick="openWeekTaskDetail('${task.id}')">
+        <div class="weektask-title">${escapeHtml(task.title)}</div>
+        <div class="weektask-meta">
+          <span class="weektask-hours">⏱ ${fmtHours(Number(task.plannedHours || 0))}</span>
+          ${cls ? `<span><i style="background:${col}"></i>${escapeHtml(cls.name)}</span>` : ''}
+          <span>${when}</span>
+        </div>
+        ${task.note ? `<div class="weektask-note">${escapeHtml(task.note)}</div>` : ''}
+      </div>
+      <div class="weektask-actions">
+        <button class="btn-icon" onclick="openWeekTaskModal('${task.id}')" title="Aanpassen">✎</button>
+        <button class="btn-icon del" onclick="deleteWeekTask('${task.id}')" title="Verwijderen">🗑</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ── VAK-CONFIDENCE ────────────────────────────────────────────
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function confidenceBand(score) {
+  const n = Number(score);
+  if (n < 25) return { key:'critical', label:'Grote achterstand', icon:'🔴', color:'#DC2626' };
+  if (n < 50) return { key:'low', label:'Achterstand', icon:'🟠', color:'#EA580C' };
+  if (n < 70) return { key:'medium', label:'Redelijk mee', icon:'🟡', color:'#CA8A04' };
+  if (n < 85) return { key:'good', label:'Goed mee', icon:'🟢', color:'#16A34A' };
+  return { key:'strong', label:'Zeer zeker', icon:'🔵', color:'#2563EB' };
+}
+
+function saveConfidenceScore(classId, value) {
+  const score = Math.max(0, Math.min(100, Math.round(Number(value))));
+  if (!appData.confidence[classId]) appData.confidence[classId] = {};
+  appData.confidence[classId].score = score;
+  appData.confidence[classId].updatedAt = new Date().toISOString();
+  saveData();
+  renderConfidence();
+  renderConfidenceWarning();
+}
+
+function previewConfidenceScore(classId, value) {
+  const card = document.querySelector(`.confidence-card[data-class-id="${classId}"]`);
+  if (!card) return;
+  const score = Math.max(0, Math.min(100, Math.round(Number(value))));
+  const band = confidenceBand(score);
+  const num = card.querySelector('.confidence-score-num');
+  const status = card.querySelector('.confidence-status');
+  const numberInput = card.querySelector('.confidence-number');
+  if (num) num.textContent = score + '%';
+  if (numberInput) numberInput.value = score;
+  if (status) {
+    status.textContent = band.icon + ' ' + band.label;
+    status.className = 'confidence-status ' + band.key;
+  }
+}
+
+function saveConfidenceNote(classId, value) {
+  if (!appData.confidence[classId]) appData.confidence[classId] = {};
+  appData.confidence[classId].note = String(value || '').trim();
+  appData.confidence[classId].updatedAt = new Date().toISOString();
+  saveData();
+}
+
+function renderConfidenceAlert(items) {
+  const alert = document.getElementById('confidence-alert');
+  if (!alert) return;
+
+  const assessed = items.filter(x => x.score !== null);
+  const low = assessed.filter(x => x.score < 50);
+  const unassessed = items.filter(x => x.score === null);
+
+  if (low.length) {
+    const worst = low.slice(0, 3).map(x => `${escapeHtml(x.cls.name)} ${x.score}%`).join(' · ');
+    alert.innerHTML = `<div class="confidence-alert critical">
+      <div class="confidence-alert-icon">🚨</div>
+      <div><strong>${low.length} vak${low.length === 1 ? '' : 'ken'} onder 50% confidence</strong>
+      <div>${worst}</div></div>
+    </div>`;
+  } else if (unassessed.length) {
+    alert.innerHTML = `<div class="confidence-alert unset">
+      <div class="confidence-alert-icon">📝</div>
+      <div><strong>Nog ${unassessed.length} vak${unassessed.length === 1 ? '' : 'ken'} niet beoordeeld</strong>
+      <div>Vul ze in zodat je dashboard je echte achterstand kan tonen.</div></div>
+    </div>`;
+  } else {
+    alert.innerHTML = `<div class="confidence-alert good">
+      <div class="confidence-alert-icon">✅</div>
+      <div><strong>Geen confidence-alarm</strong><div>Al je ingestelde vakken staan momenteel op minstens 50%.</div></div>
+    </div>`;
+  }
+}
+
+function renderConfidence() {
+  const cont = document.getElementById('confidence-list');
+  if (!cont) return;
+
+  const items = appData.classes.map(cls => {
+    const data = appData.confidence[cls.id] || {};
+    const score = Number.isFinite(Number(data.score)) && data.score !== '' && data.score !== undefined
+      ? Number(data.score) : null;
+    return { cls, data, score };
+  }).sort((a,b) => {
+    if (a.score === null && b.score === null) return a.cls.name.localeCompare(b.cls.name, 'nl');
+    if (a.score === null) return 1;
+    if (b.score === null) return -1;
+    return a.score - b.score;
+  });
+
+  renderConfidenceAlert(items);
+
+  if (!items.length) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🚨</div><div class="empty-state-title">Nog geen vakken</div><div class="empty-state-sub">Maak eerst je vakken aan bij Klasses beheren.</div></div>';
+    return;
+  }
+
+  cont.innerHTML = '<div class="confidence-grid">' + items.map(({cls,data,score}) => {
+    const displayScore = score === null ? 50 : score;
+    const band = confidenceBand(displayScore);
+    return `<div class="confidence-card${score === null ? ' unset' : ''}" data-class-id="${cls.id}">
+      <div class="confidence-card-head">
+        <div class="confidence-subject"><span style="background:${cls.color}"></span>${escapeHtml(cls.name)}</div>
+        <div class="confidence-score-num">${score === null ? '—' : score + '%'}</div>
+      </div>
+      <div class="confidence-status ${score === null ? 'unset' : band.key}">${score === null ? '⚪ Nog niet ingesteld' : band.icon + ' ' + band.label}</div>
+      <div class="confidence-controls">
+        <input type="range" min="0" max="100" step="1" value="${displayScore}"
+          oninput="previewConfidenceScore('${cls.id}',this.value)"
+          onchange="saveConfidenceScore('${cls.id}',this.value)">
+        <input class="confidence-number" type="number" min="0" max="100" value="${score === null ? '' : score}"
+          placeholder="%" onchange="saveConfidenceScore('${cls.id}',this.value)">
+      </div>
+      <label class="confidence-note-label">Waar loop je nog achter / wat voelt onzeker?</label>
+      <textarea class="confidence-note" rows="2" placeholder="Bijv. hoofdstuk 5 nog niet goed begrepen"
+        onchange="saveConfidenceNote('${cls.id}',this.value)">${escapeHtml(data.note || '')}</textarea>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderConfidenceWarning() {
+  const cont = document.getElementById('confidence-warning');
+  if (!cont) return;
+
+  const items = appData.classes.map(cls => {
+    const raw = appData.confidence[cls.id]?.score;
+    const score = raw === undefined || raw === null || raw === '' ? null : Number(raw);
+    return { cls, score };
+  });
+
+  const low = items
+    .filter(x => x.score !== null && x.score < 50)
+    .sort((a,b) => a.score - b.score);
+
+  const unset = items.filter(x => x.score === null).length;
+
+  if (low.length) {
+    cont.innerHTML = low.slice(0,3).map(x => `<div class="widget-item" onclick="showTab('confidence')">
+      <div class="widget-item-title"><span class="confidence-mini-dot"></span>${escapeHtml(x.cls.name)}</div>
+      <div class="widget-item-meta">${x.score}% · ${confidenceBand(x.score).label}</div>
+    </div>`).join('') + (low.length > 3 ? `<div class="widget-empty">+${low.length-3} meer</div>` : '');
+  } else if (unset) {
+    cont.innerHTML = `<div class="widget-item" onclick="showTab('confidence')"><div class="widget-item-title">📝 Confidence invullen</div><div class="widget-item-meta">${unset} nog niet ingesteld</div></div>`;
+  } else {
+    cont.innerHTML = '<div class="widget-empty">Geen alarm — alles ≥ 50%</div>';
+  }
+}
+
 // ── CLASSES ───────────────────────────────────────────────────
 function populateClassSelect(selectId) {
   const sel = document.getElementById(selectId);
@@ -1392,6 +1862,8 @@ function deleteClass(id) {
   if (!confirm('Klasse verwijderen? Items behouden hun data maar verliezen de klasse-koppeling.')) return;
   appData.classes = appData.classes.filter(c => c.id !== id);
   appData.events.forEach(e => { if (e.classId === id) e.classId = null; });
+  appData.weekTasks.forEach(t => { if (t.classId === id) t.classId = null; });
+  if (appData.confidence[id]) delete appData.confidence[id];
   saveData();
   renderClassesList();
   renderCalendar();
@@ -1771,9 +2243,12 @@ function renderAll() {
   renderUpcomingDeadlines();
   renderStudyHours();
   renderStudyHoursNext();
+  renderConfidenceWarning();
   const active = document.querySelector('.tab-content.active');
   if (active) {
     if (active.id === 'tab-taken')           renderEventsList();
+    if (active.id === 'tab-weekplan')        renderWeekPlan();
+    if (active.id === 'tab-confidence')      renderConfidence();
     if (active.id === 'tab-beschikbaarheid') renderAvailabilityList();
     if (active.id === 'tab-kalenders')         renderExternalCalendars();
     if (active.id === 'tab-klasses')         renderClassesList();
@@ -1787,6 +2262,7 @@ document.addEventListener('click', e => {
   e.target.style.display = 'none';
   currentEventId = null;
   currentAvailId = null;
+  currentWeekTaskId = null;
 });
 
 // ── COLOR PREVIEW ─────────────────────────────────────────────
@@ -1801,7 +2277,7 @@ document.addEventListener('change', e => {
 function clearAllData() {
   if (!confirm('⚠️ Alle data verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
   localStorage.removeItem('studieAgenda_v2');
-  appData = { classes:[], events:[], availability:[] };
+  appData = { classes:[], events:[], availability:[], weekTasks:[], confidence:{} };
   initDefaultClasses();
   renderAll();
 }

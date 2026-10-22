@@ -1859,3 +1859,417 @@ body {
     min-width: 0;
   }
 }
+
+
+/* ============================================================
+   WEEKCHECKLIST
+   ============================================================ */
+.weekplan-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.weekplan-period {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.weekplan-overdue {
+  background: #FFF7ED;
+  border: 1.5px solid #FDBA74;
+  color: #9A3412;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.weekplan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  margin-bottom: 9px;
+}
+
+.weekplan-stat {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.weekplan-stat span {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.weekplan-stat small {
+  color: var(--text-2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .35px;
+  font-weight: 600;
+}
+
+.weekplan-progress {
+  height: 9px;
+  background: #E5E7EB;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.weekplan-progress-fill {
+  height: 100%;
+  background: #0F766E;
+  border-radius: inherit;
+  transition: width .25s ease;
+}
+
+.weekplan-progress-label {
+  margin: 5px 0 16px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.weektask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.weektask-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-left: 5px solid #0F766E;
+  border-radius: var(--radius);
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 12px 12px 10px;
+  box-shadow: var(--shadow);
+}
+
+.weektask-card.done {
+  opacity: .62;
+  background: #F9FAFB;
+}
+
+.weektask-card.done .weektask-title {
+  text-decoration: line-through;
+}
+
+.weektask-check {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid #0F766E;
+  background: #fff;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weektask-card.done .weektask-check {
+  background: #0F766E;
+}
+
+.weektask-main {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.weektask-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.weektask-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.weektask-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weektask-meta i {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.weektask-hours {
+  font-weight: 700;
+  color: #0F766E;
+}
+
+.weektask-note {
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.weektask-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.weekplan-empty-btn {
+  margin-top: 14px;
+}
+
+.hours-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hours-input-wrap input { flex: 1; }
+.hours-input-wrap span { color: var(--text-2); font-weight: 600; }
+
+.week-schedule-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px 12px;
+  background: #F0FDFA;
+  border: 1.5px solid #99F6E4;
+  border-radius: var(--radius-sm);
+  color: #115E59;
+  font-weight: 600;
+}
+
+.week-schedule-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.week-schedule-fields {
+  background: #FAFAF8;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: -4px;
+  margin-bottom: 12px;
+}
+
+.schedule-explain {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ============================================================
+   VAK-CONFIDENCE
+   ============================================================ */
+.confidence-alert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid;
+  font-size: 12px;
+}
+
+.confidence-alert strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.confidence-alert-icon { font-size: 22px; }
+
+.confidence-alert.critical { background:#FEF2F2; border-color:#FCA5A5; color:#991B1B; }
+.confidence-alert.unset    { background:#FFFBEB; border-color:#FDE68A; color:#92400E; }
+.confidence-alert.good     { background:#ECFDF5; border-color:#A7F3D0; color:#065F46; }
+
+.confidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.confidence-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.confidence-card.unset {
+  border-style: dashed;
+}
+
+.confidence-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.confidence-subject {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.confidence-subject span {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.confidence-score-num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.confidence-status {
+  display: inline-flex;
+  margin: 7px 0 11px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.confidence-status.critical { background:#FEE2E2; color:#991B1B; }
+.confidence-status.low      { background:#FFEDD5; color:#9A3412; }
+.confidence-status.medium   { background:#FEF9C3; color:#854D0E; }
+.confidence-status.good     { background:#DCFCE7; color:#166534; }
+.confidence-status.strong   { background:#DBEAFE; color:#1E40AF; }
+.confidence-status.unset    { background:#F3F4F6; color:#6B7280; }
+
+.confidence-controls {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  gap: 10px;
+  align-items: center;
+}
+
+.confidence-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.confidence-number {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.confidence-note-label {
+  display: block;
+  margin: 10px 0 5px;
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.confidence-note {
+  width: 100%;
+  resize: vertical;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #FAFAF8;
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  color: var(--text);
+  outline: none;
+}
+
+.confidence-mini-dot {
+  width: 7px;
+  height: 7px;
+  background: #EF4444;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  .weekplan-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .weekplan-period {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    text-align: center;
+    order: -1;
+  }
+
+  .weekplan-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .weektask-card {
+    grid-template-columns: 38px 1fr;
+  }
+
+  .weektask-actions {
+    grid-column: 2;
+    justify-content: flex-end;
+  }
+
+  .confidence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .confidence-controls {
+    grid-template-columns: 1fr 74px;
+  }
+}
+
+@media (max-width: 480px) {
+  .weekplan-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .weekplan-stat {
+    padding: 9px;
+  }
+
+  .weekplan-stat span {
+    font-size: 18px;
+  }
+
+  .confidence-number,
+  .confidence-note {
+    font-size: 16px;
+  }
+}

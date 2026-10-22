@@ -28,6 +28,8 @@
     <nav class="sidebar-nav">
       <button class="nav-btn active" data-tab="kalender" onclick="showTab('kalender')"><span>📅</span> Kalender</button>
       <button class="nav-btn" data-tab="taken" onclick="showTab('taken')"><span>✅</span> Taken &amp; Evenementen</button>
+      <button class="nav-btn" data-tab="weekplan" onclick="showTab('weekplan')"><span>☑️</span> Weekchecklist</button>
+      <button class="nav-btn" data-tab="confidence" onclick="showTab('confidence')"><span>🚨</span> Vak-confidence</button>
       <button class="nav-btn" data-tab="beschikbaarheid" onclick="showTab('beschikbaarheid')"><span>🟢</span> Beschikbaarheid</button>
       <button class="nav-btn" data-tab="kalenders" onclick="showTab('kalenders')"><span>🔄</span> Externe agenda's</button>
       <button class="nav-btn" data-tab="klasses" onclick="showTab('klasses')"><span>🎨</span> Klasses beheren</button>
@@ -54,6 +56,10 @@
       <div class="widget">
         <div class="widget-title">📅 Studieuren volgende week</div>
         <div id="study-hours-next"></div>
+      </div>
+      <div class="widget confidence-sidebar-widget">
+        <div class="widget-title">🚨 Vak-confidence</div>
+        <div id="confidence-warning"></div>
       </div>
     </div>
   </aside>
@@ -110,6 +116,39 @@
         </select>
       </div>
       <div id="events-list"></div>
+    </div>
+
+    <!-- TAB: WEEKCHECKLIST -->
+    <div id="tab-weekplan" class="tab-content">
+      <div class="tab-header">
+        <div>
+          <h2>Weekchecklist</h2>
+          <p class="tab-subtitle">Wat wil je deze week afwerken en hoeveel tijd wil je ervoor voorzien?</p>
+        </div>
+        <button class="btn-primary" onclick="openWeekTaskModal()">+ Weektaak</button>
+      </div>
+
+      <div class="weekplan-toolbar">
+        <button class="btn-nav" onclick="weekPlanPrev()">&#8249; Vorige</button>
+        <button class="btn-today" onclick="weekPlanToday()">Deze week</button>
+        <button class="btn-nav" onclick="weekPlanNext()">Volgende &#8250;</button>
+        <div id="weekplan-period" class="weekplan-period"></div>
+      </div>
+
+      <div id="weekplan-summary"></div>
+      <div id="weekplan-list"></div>
+    </div>
+
+    <!-- TAB: VAK-CONFIDENCE -->
+    <div id="tab-confidence" class="tab-content">
+      <div class="tab-header">
+        <div>
+          <h2>Vak-confidence</h2>
+          <p class="tab-subtitle">Geef per vak aan hoe goed je het gevoel hebt dat je mee bent. Lage scores komen automatisch als alarm bovenaan.</p>
+        </div>
+      </div>
+      <div id="confidence-alert"></div>
+      <div id="confidence-list"></div>
     </div>
 
     <!-- TAB: BESCHIKBAARHEID -->
@@ -338,6 +377,86 @@
       <button class="btn-outline" onclick="planAvailAsEvent()">📝 Plannen als taak</button>
       <button class="btn-primary" onclick="planAndReplaceAvail()">🔄 Vervangen door taak</button>
       <button class="btn-danger" onclick="deleteCurrentAvail()">🗑 Verwijderen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: WEEK TASK ====== -->
+<div id="week-task-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="week-task-modal-title">Nieuwe weektaak</h3>
+      <button class="modal-close" onclick="closeWeekTaskModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="week-task-id">
+      <input type="hidden" id="week-task-week-start">
+
+      <div class="form-group">
+        <label>Wat wil je gedaan hebben? *</label>
+        <input type="text" id="week-task-title" placeholder="Bijv. Oefeningen hoofdstuk 4 afwerken">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vak / klasse</label>
+          <select id="week-task-class"></select>
+        </div>
+        <div class="form-group">
+          <label>Geplande tijd *</label>
+          <div class="hours-input-wrap">
+            <input type="number" id="week-task-hours" min="0.25" max="24" step="0.25" value="1">
+            <span>uur</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="week-schedule-toggle">
+          <input type="checkbox" id="week-task-schedule-toggle" onchange="toggleWeekTaskScheduleFields()">
+          <span>📅 Deze taak ook op een tijdstip in de kalender zetten</span>
+        </label>
+      </div>
+
+      <div id="week-task-schedule-fields" class="week-schedule-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dag in deze week *</label>
+            <input type="date" id="week-task-date">
+          </div>
+          <div class="form-group">
+            <label>Starttijd *</label>
+            <input type="time" id="week-task-time" value="18:00">
+          </div>
+        </div>
+        <div class="schedule-explain">De duur van het kalenderblok wordt automatisch gelijk aan je geplande uren.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Notitie</label>
+        <textarea id="week-task-note" rows="3" placeholder="Bijv. vooral oefeningen 4.1 t.e.m. 4.8"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeWeekTaskModal()">Annuleren</button>
+      <button class="btn-primary" onclick="saveWeekTask()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL: WEEK TASK DETAIL ====== -->
+<div id="week-task-detail-modal" class="modal-overlay" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="week-task-detail-title">Weektaak</h3>
+      <button class="modal-close" onclick="closeWeekTaskDetail()">×</button>
+    </div>
+    <div class="modal-body" id="week-task-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeWeekTaskDetail()">Sluiten</button>
+      <button class="btn-primary" id="week-task-detail-toggle" onclick="toggleCurrentWeekTaskDone()">✓ Afvinken</button>
+      <button class="btn-outline" onclick="editCurrentWeekTask()">✎ Aanpassen</button>
+      <button class="btn-danger" onclick="deleteCurrentWeekTask()">🗑 Verwijderen</button>
     </div>
   </div>
 </div>
