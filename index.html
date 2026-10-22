@@ -144,7 +144,7 @@
       <div class="tab-header">
         <div>
           <h2>Vak-confidence</h2>
-          <p class="tab-subtitle">Geef per vak aan hoe goed je het gevoel hebt dat je mee bent. Lage scores komen automatisch als alarm bovenaan.</p>
+          <p class="tab-subtitle">Splits elk vak op in delen (bijv. hoofdstukken, theorie, oefeningen), geef elk deel confidence en examengewicht. Alle gewichten samen moeten exact 100% zijn.</p>
         </div>
       </div>
       <div id="confidence-alert"></div>
@@ -184,17 +184,20 @@
             <div id="timeedit-status" class="external-cal-status">Rooster laden…</div>
           </div>
         </div>
-        <label class="calendar-toggle">
+        <div class="external-cal-actions">
+          <label class="calendar-toggle">
           <input type="checkbox" id="timeedit-enabled" checked onchange="toggleTimeEditCalendar(this.checked)">
           <span class="toggle-track"><span class="toggle-thumb"></span></span>
           <span>Tonen in kalender</span>
         </label>
+          <button id="timeedit-restore-hidden" class="btn-outline btn-sm" style="display:none" onclick="restoreHiddenTimeEditEvents()">↩ Verborgen lessen herstellen</button>
+        </div>
       </div>
 
       <div class="external-cal-help">
         <strong>Hoe werkt dit?</strong>
         <p>De website leest een lokale kopie van je TimeEdit-feed. GitHub Actions vernieuwt die kopie automatisch en bij het openen probeert de site ook rechtstreeks een actuele versie te laden.</p>
-        <p>TimeEdit-items zijn alleen-lezen. Je eigen taken, deadlines, lessen en beschikbare momenten blijven apart bewerkbaar.</p>
+        <p>TimeEdit-items komen uit je VUB-rooster. Je kunt individuele lessen uit jouw eigen kalender verwijderen/verbergen; dat verandert niets aan TimeEdit zelf. Verborgen lessen kun je hier altijd herstellen.</p>
       </div>
     </div>
 
@@ -318,6 +321,7 @@
       <button class="btn-outline" onclick="markEventDone()" id="btn-mark-done">✓ Afgewerkt</button>
       <button class="btn-outline" onclick="editCurrentEvent()" id="btn-edit-event">✎ Aanpassen</button>
       <button class="btn-danger" onclick="deleteCurrentEvent()" id="btn-delete-event">🗑 Verwijderen</button>
+      <button class="btn-danger" onclick="hideCurrentExternalEvent()" id="btn-hide-external-event" style="display:none">🗑 Verwijderen uit mijn kalender</button>
     </div>
   </div>
 </div>

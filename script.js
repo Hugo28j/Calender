@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── STATE ────────────────────────────────────────────────────
-let appData = { classes: [], events: [], availability: [], weekTasks: [], confidence: {} };
+let appData = { classes: [], events: [], availability: [], weekTasks: [], confidence: {}, hiddenExternalUids: [] };
 let currentView  = 'month';
 let currentDate  = new Date();
 let currentEventId = null;
@@ -29,6 +29,7 @@ async function init() {
   if (!appData.availability) appData.availability = [];
   if (!appData.weekTasks)    appData.weekTasks = [];
   if (!appData.confidence || Array.isArray(appData.confidence)) appData.confidence = {};
+  if (!Array.isArray(appData.hiddenExternalUids)) appData.hiddenExternalUids = [];
   renderAll();
   await loadExternalCalendars();
   renderAll();
@@ -168,6 +169,7 @@ function itemsForDay(dateStr) {
 
   if (isTimeEditEnabled()) {
     externalEvents.forEach(e => {
+      if (appData.hiddenExternalUids.includes(e.uid)) return;
       const s = new Date(e.start);
       const n = e.end ? new Date(e.end) : new Date(s.getTime() + 3600e3);
       if (s < dEnd && n > dStart) out.push({ ...e, _external: true, type: 'VUB-les' });
@@ -331,7 +333,17 @@ async function refreshExternalCalendars() {
 function renderExternalCalendars() {
   const status = document.getElementById('timeedit-status');
   const toggle = document.getElementById('timeedit-enabled');
+  const restoreBtn = document.getElementById('timeedit-restore-hidden');
   if (toggle) toggle.checked = isTimeEditEnabled();
+
+  const hiddenCount = appData.hiddenExternalUids.length;
+  if (restoreBtn) {
+    restoreBtn.style.display = hiddenCount ? '' : 'none';
+    restoreBtn.textContent = hiddenCount === 1
+      ? '↩ 1 verborgen les herstellen'
+      : `↩ ${hiddenCount} verborgen lessen herstellen`;
+  }
+
   if (!status) return;
 
   if (externalCalendarState.loading) {
@@ -339,16 +351,29 @@ function renderExternalCalendars() {
     status.textContent = 'Rooster laden…';
     return;
   }
+
   if (externalCalendarState.loaded) {
     const when = externalCalendarState.updatedAt
       ? externalCalendarState.updatedAt.toLocaleTimeString('nl-BE', {hour:'2-digit', minute:'2-digit'})
       : '';
+    const visibleCount = externalEvents.filter(e => !appData.hiddenExternalUids.includes(e.uid)).length;
+    const hiddenText = hiddenCount ? ` · ${hiddenCount} verborgen` : '';
     status.className = 'external-cal-status ok';
-    status.textContent = `${externalEvents.length} items geladen · ${externalCalendarState.source}${when ? ' · ' + when : ''}`;
+    status.textContent = `${visibleCount} zichtbaar · ${externalCalendarState.source}${hiddenText}${when ? ' · ' + when : ''}`;
     return;
   }
+
   status.className = 'external-cal-status error';
   status.textContent = 'Nog geen TimeEdit-data. De GitHub-update vult dit automatisch aan.';
+}
+
+function restoreHiddenTimeEditEvents() {
+  if (!appData.hiddenExternalUids.length) return;
+  if (!confirm(`${appData.hiddenExternalUids.length} verborgen TimeEdit-les${appData.hiddenExternalUids.length === 1 ? '' : 'sen'} opnieuw tonen?`)) return;
+  appData.hiddenExternalUids = [];
+  saveData();
+  renderAll();
+  renderExternalCalendars();
 }
 
 function openExternalEventDetail(id) {
@@ -358,22 +383,38 @@ function openExternalEventDetail(id) {
   currentExternalEventId = id;
 
   document.getElementById('detail-event-title').innerHTML =
-    `<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${TIMEEDIT_COLOR};margin-right:8px;vertical-align:middle"></span>${ev.title}`;
+    `<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${TIMEEDIT_COLOR};margin-right:8px;vertical-align:middle"></span>${escapeHtml(ev.title)}`;
 
   document.getElementById('event-detail-body').innerHTML = `
     <div class="detail-row"><span class="detail-label">Bron</span><span class="detail-value">🎓 VUB TimeEdit</span></div>
     <div class="detail-row"><span class="detail-label">Start</span><span class="detail-value">${fmtDate(ev.start)} &middot; ${fmtTime(ev.start)}</span></div>
     <div class="detail-row"><span class="detail-label">Einde</span><span class="detail-value">${fmtDate(ev.end)} &middot; ${fmtTime(ev.end)}</span></div>
     <div class="detail-row"><span class="detail-label">Duur</span><span class="detail-value">${fmtDuration(ev.start, ev.end)}</span></div>
-    ${ev.location ? `<div class="detail-row"><span class="detail-label">Lokaal</span><span class="detail-value">${ev.location}</span></div>` : ''}
-    ${ev.description ? `<div class="detail-desc">${ev.description}</div>` : ''}
-    <div class="readonly-note">🔒 Dit item komt uit TimeEdit en is alleen-lezen.</div>
+    ${ev.location ? `<div class="detail-row"><span class="detail-label">Lokaal</span><span class="detail-value">${escapeHtml(ev.location)}</span></div>` : ''}
+    ${ev.description ? `<div class="detail-desc">${escapeHtml(ev.description).replace(/\n/g,'<br>')}</div>` : ''}
+    <div class="readonly-note">💡 Verwijderen verbergt alleen deze les in jouw agenda. De les blijft gewoon in TimeEdit bestaan.</div>
   `;
 
   document.getElementById('btn-mark-done').style.display = 'none';
   document.getElementById('btn-edit-event').style.display = 'none';
   document.getElementById('btn-delete-event').style.display = 'none';
+  document.getElementById('btn-hide-external-event').style.display = '';
   document.getElementById('event-detail-modal').style.display = 'flex';
+}
+
+function hideCurrentExternalEvent() {
+  const ev = externalEvents.find(e => e.id === currentExternalEventId);
+  if (!ev) return;
+  if (!confirm(`"${ev.title}" uit jouw kalender verwijderen?\n\nJe kunt verborgen lessen later herstellen via Externe agenda's.`)) return;
+
+  if (!appData.hiddenExternalUids.includes(ev.uid)) {
+    appData.hiddenExternalUids.push(ev.uid);
+  }
+
+  saveData();
+  closeEventDetailModal();
+  renderAll();
+  renderExternalCalendars();
 }
 
 // ── CALENDAR ─────────────────────────────────────────────────
@@ -895,6 +936,7 @@ function openEventDetail(id) {
   document.getElementById('btn-mark-done').style.display = isDone ? 'none' : '';
   document.getElementById('btn-edit-event').style.display = '';
   document.getElementById('btn-delete-event').style.display = '';
+  document.getElementById('btn-hide-external-event').style.display = 'none';
   document.getElementById('event-detail-modal').style.display = 'flex';
 }
 
@@ -1675,36 +1717,102 @@ function confidenceBand(score) {
   return { key:'strong', label:'Zeer zeker', icon:'🔵', color:'#2563EB' };
 }
 
-function saveConfidenceScore(classId, value) {
-  const score = Math.max(0, Math.min(100, Math.round(Number(value))));
-  if (!appData.confidence[classId]) appData.confidence[classId] = {};
-  appData.confidence[classId].score = score;
-  appData.confidence[classId].updatedAt = new Date().toISOString();
+function ensureConfidenceSubjectData(classId) {
+  let data = appData.confidence[classId];
+
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    data = { parts: [], note: '' };
+    appData.confidence[classId] = data;
+  }
+
+  // Migrate the old one-score confidence system without losing the user's value.
+  if (!Array.isArray(data.parts)) {
+    const oldScore = data.score;
+    data.parts = [];
+    if (oldScore !== undefined && oldScore !== null && oldScore !== '' && Number.isFinite(Number(oldScore))) {
+      data.parts.push({
+        id: genId('confpart'),
+        name: 'Algemeen',
+        score: Math.max(0, Math.min(100, Math.round(Number(oldScore)))),
+        weight: 100
+      });
+    }
+    delete data.score;
+  }
+
+  data.parts = data.parts.map(p => ({
+    id: p.id || genId('confpart'),
+    name: String(p.name || 'Nieuw deel'),
+    score: Math.max(0, Math.min(100, Number.isFinite(Number(p.score)) ? Math.round(Number(p.score)) : 50)),
+    weight: Math.max(0, Math.min(100, Number.isFinite(Number(p.weight)) ? Number(p.weight) : 0))
+  }));
+
+  if (typeof data.note !== 'string') data.note = '';
+  return data;
+}
+
+function confidenceMetrics(classId) {
+  const data = ensureConfidenceSubjectData(classId);
+  const parts = data.parts;
+  const totalWeight = parts.reduce((sum,p) => sum + Number(p.weight || 0), 0);
+  const roundedWeight = Math.round(totalWeight * 100) / 100;
+  const validWeight = Math.abs(roundedWeight - 100) < 0.001 && parts.length > 0;
+  const weightedPoints = parts.reduce((sum,p) => sum + (Number(p.score || 0) * Number(p.weight || 0) / 100), 0);
+  const overall = validWeight ? Math.round(weightedPoints * 10) / 10 : null;
+
+  return { data, parts, totalWeight: roundedWeight, validWeight, weightedPoints, overall };
+}
+
+function addConfidencePart(classId) {
+  const { data, totalWeight } = confidenceMetrics(classId);
+  const remaining = Math.max(0, Math.round((100 - totalWeight) * 100) / 100);
+  data.parts.push({
+    id: genId('confpart'),
+    name: data.parts.length ? `Deel ${data.parts.length + 1}` : 'Hoofdstuk 1',
+    score: 50,
+    weight: remaining
+  });
+  data.updatedAt = new Date().toISOString();
   saveData();
   renderConfidence();
   renderConfidenceWarning();
 }
 
-function previewConfidenceScore(classId, value) {
-  const card = document.querySelector(`.confidence-card[data-class-id="${classId}"]`);
-  if (!card) return;
-  const score = Math.max(0, Math.min(100, Math.round(Number(value))));
-  const band = confidenceBand(score);
-  const num = card.querySelector('.confidence-score-num');
-  const status = card.querySelector('.confidence-status');
-  const numberInput = card.querySelector('.confidence-number');
-  if (num) num.textContent = score + '%';
-  if (numberInput) numberInput.value = score;
-  if (status) {
-    status.textContent = band.icon + ' ' + band.label;
-    status.className = 'confidence-status ' + band.key;
+function deleteConfidencePart(classId, partId) {
+  const data = ensureConfidenceSubjectData(classId);
+  const part = data.parts.find(p => p.id === partId);
+  if (!part) return;
+  if (!confirm(`Confidence-deel "${part.name}" verwijderen?`)) return;
+  data.parts = data.parts.filter(p => p.id !== partId);
+  data.updatedAt = new Date().toISOString();
+  saveData();
+  renderConfidence();
+  renderConfidenceWarning();
+}
+
+function updateConfidencePart(classId, partId, field, value) {
+  const data = ensureConfidenceSubjectData(classId);
+  const part = data.parts.find(p => p.id === partId);
+  if (!part) return;
+
+  if (field === 'name') {
+    part.name = String(value || '').trim() || 'Naamloos deel';
+  } else if (field === 'score') {
+    part.score = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+  } else if (field === 'weight') {
+    part.weight = Math.max(0, Math.min(100, Number(value) || 0));
   }
+
+  data.updatedAt = new Date().toISOString();
+  saveData();
+  renderConfidence();
+  renderConfidenceWarning();
 }
 
 function saveConfidenceNote(classId, value) {
-  if (!appData.confidence[classId]) appData.confidence[classId] = {};
-  appData.confidence[classId].note = String(value || '').trim();
-  appData.confidence[classId].updatedAt = new Date().toISOString();
+  const data = ensureConfidenceSubjectData(classId);
+  data.note = String(value || '').trim();
+  data.updatedAt = new Date().toISOString();
   saveData();
 }
 
@@ -1712,27 +1820,26 @@ function renderConfidenceAlert(items) {
   const alert = document.getElementById('confidence-alert');
   if (!alert) return;
 
-  const assessed = items.filter(x => x.score !== null);
-  const low = assessed.filter(x => x.score < 50);
-  const unassessed = items.filter(x => x.score === null);
+  const incomplete = items.filter(x => !x.validWeight);
+  const low = items.filter(x => x.validWeight && x.score !== null && x.score < 50);
 
   if (low.length) {
-    const worst = low.slice(0, 3).map(x => `${escapeHtml(x.cls.name)} ${x.score}%`).join(' · ');
+    const worst = low.slice(0,3).map(x => `${escapeHtml(x.cls.name)} ${x.score}%`).join(' · ');
     alert.innerHTML = `<div class="confidence-alert critical">
       <div class="confidence-alert-icon">🚨</div>
-      <div><strong>${low.length} vak${low.length === 1 ? '' : 'ken'} onder 50% confidence</strong>
+      <div><strong>${low.length} vak${low.length === 1 ? '' : 'ken'} onder 50% gewogen confidence</strong>
       <div>${worst}</div></div>
     </div>`;
-  } else if (unassessed.length) {
+  } else if (incomplete.length) {
     alert.innerHTML = `<div class="confidence-alert unset">
-      <div class="confidence-alert-icon">📝</div>
-      <div><strong>Nog ${unassessed.length} vak${unassessed.length === 1 ? '' : 'ken'} niet beoordeeld</strong>
-      <div>Vul ze in zodat je dashboard je echte achterstand kan tonen.</div></div>
+      <div class="confidence-alert-icon">⚖️</div>
+      <div><strong>${incomplete.length} vak${incomplete.length === 1 ? '' : 'ken'} nog niet volledig gewogen</strong>
+      <div>De examengewichten moeten per vak samen exact 100% zijn voordat de eind-confidence geldig is.</div></div>
     </div>`;
   } else {
     alert.innerHTML = `<div class="confidence-alert good">
       <div class="confidence-alert-icon">✅</div>
-      <div><strong>Geen confidence-alarm</strong><div>Al je ingestelde vakken staan momenteel op minstens 50%.</div></div>
+      <div><strong>Geen confidence-alarm</strong><div>Alle vakken zijn volledig gewogen en staan momenteel op minstens 50%.</div></div>
     </div>`;
   }
 }
@@ -1742,15 +1849,20 @@ function renderConfidence() {
   if (!cont) return;
 
   const items = appData.classes.map(cls => {
-    const data = appData.confidence[cls.id] || {};
-    const score = Number.isFinite(Number(data.score)) && data.score !== '' && data.score !== undefined
-      ? Number(data.score) : null;
-    return { cls, data, score };
+    const metrics = confidenceMetrics(cls.id);
+    return {
+      cls,
+      data: metrics.data,
+      parts: metrics.parts,
+      totalWeight: metrics.totalWeight,
+      validWeight: metrics.validWeight,
+      score: metrics.overall
+    };
   }).sort((a,b) => {
-    if (a.score === null && b.score === null) return a.cls.name.localeCompare(b.cls.name, 'nl');
-    if (a.score === null) return 1;
-    if (b.score === null) return -1;
-    return a.score - b.score;
+    if (a.validWeight && b.validWeight) return a.score - b.score;
+    if (a.validWeight) return -1;
+    if (b.validWeight) return 1;
+    return a.cls.name.localeCompare(b.cls.name, 'nl');
   });
 
   renderConfidenceAlert(items);
@@ -1760,27 +1872,81 @@ function renderConfidence() {
     return;
   }
 
-  cont.innerHTML = '<div class="confidence-grid">' + items.map(({cls,data,score}) => {
-    const displayScore = score === null ? 50 : score;
-    const band = confidenceBand(displayScore);
-    return `<div class="confidence-card${score === null ? ' unset' : ''}" data-class-id="${cls.id}">
-      <div class="confidence-card-head">
-        <div class="confidence-subject"><span style="background:${cls.color}"></span>${escapeHtml(cls.name)}</div>
-        <div class="confidence-score-num">${score === null ? '—' : score + '%'}</div>
+  cont.innerHTML = '<div class="confidence-subject-list">' + items.map(item => {
+    const { cls, data, parts, totalWeight, validWeight, score } = item;
+    const band = validWeight ? confidenceBand(score) : null;
+    const remaining = Math.round((100 - totalWeight) * 100) / 100;
+
+    const weightMessage = validWeight
+      ? '<span class="confidence-weight-ok">✓ Examengewicht = 100%</span>'
+      : totalWeight < 100
+        ? `<span class="confidence-weight-warn">Nog ${Math.abs(remaining)}% te verdelen</span>`
+        : `<span class="confidence-weight-error">${Math.abs(remaining)}% te veel verdeeld</span>`;
+
+    const partRows = parts.length
+      ? parts.map(part => {
+          const contribution = Math.round((part.score * part.weight / 100) * 10) / 10;
+          const pBand = confidenceBand(part.score);
+          return `<div class="confidence-part-row">
+            <div class="confidence-part-name-wrap">
+              <input class="confidence-part-name" type="text" value="${escapeHtml(part.name)}"
+                onchange="updateConfidencePart('${cls.id}','${part.id}','name',this.value)"
+                aria-label="Naam onderdeel">
+            </div>
+            <div class="confidence-part-score">
+              <div class="confidence-part-label">Confidence</div>
+              <div class="confidence-part-score-line">
+                <input type="range" min="0" max="100" step="1" value="${part.score}"
+                  oninput="this.nextElementSibling.value=this.value"
+                  onchange="updateConfidencePart('${cls.id}','${part.id}','score',this.value)">
+                <input type="number" min="0" max="100" step="1" value="${part.score}"
+                  onchange="updateConfidencePart('${cls.id}','${part.id}','score',this.value)">
+                <span>%</span>
+              </div>
+              <div class="confidence-part-band ${pBand.key}">${pBand.icon} ${pBand.label}</div>
+            </div>
+            <div class="confidence-part-weight">
+              <div class="confidence-part-label">Op examen</div>
+              <div class="confidence-weight-input">
+                <input type="number" min="0" max="100" step="1" value="${part.weight}"
+                  onchange="updateConfidencePart('${cls.id}','${part.id}','weight',this.value)">
+                <span>%</span>
+              </div>
+              <div class="confidence-contribution">→ ${contribution} punt${contribution === 1 ? '' : 'en'} confidence</div>
+            </div>
+            <button class="confidence-part-delete" onclick="deleteConfidencePart('${cls.id}','${part.id}')" title="Deel verwijderen">×</button>
+          </div>`;
+        }).join('')
+      : '<div class="confidence-no-parts">Nog geen delen. Voeg bijvoorbeeld “Theorie”, “Hoofdstuk 1” of “Oefeningen” toe.</div>';
+
+    return `<section class="confidence-subject-card" data-class-id="${cls.id}">
+      <div class="confidence-subject-head">
+        <div>
+          <div class="confidence-subject-title"><span style="background:${cls.color}"></span>${escapeHtml(cls.name)}</div>
+          <div class="confidence-subject-weight">${weightMessage} · totaal ${totalWeight}%</div>
+        </div>
+        <div class="confidence-overall ${validWeight ? band.key : 'unset'}">
+          <span class="confidence-overall-label">Gewogen score</span>
+          <strong>${validWeight ? score + '%' : '—'}</strong>
+          <small>${validWeight ? band.icon + ' ' + band.label : 'Eerst gewichten naar 100%'}</small>
+        </div>
       </div>
-      <div class="confidence-status ${score === null ? 'unset' : band.key}">${score === null ? '⚪ Nog niet ingesteld' : band.icon + ' ' + band.label}</div>
-      <div class="confidence-controls">
-        <input type="range" min="0" max="100" step="1" value="${displayScore}"
-          oninput="previewConfidenceScore('${cls.id}',this.value)"
-          onchange="saveConfidenceScore('${cls.id}',this.value)">
-        <input class="confidence-number" type="number" min="0" max="100" value="${score === null ? '' : score}"
-          placeholder="%" onchange="saveConfidenceScore('${cls.id}',this.value)">
+
+      <div class="confidence-parts">
+        ${partRows}
       </div>
-      <label class="confidence-note-label">Waar loop je nog achter / wat voelt onzeker?</label>
-      <textarea class="confidence-note" rows="2" placeholder="Bijv. hoofdstuk 5 nog niet goed begrepen"
+
+      <div class="confidence-subject-actions">
+        <button class="btn-outline confidence-add-part" onclick="addConfidencePart('${cls.id}')">+ Deel toevoegen</button>
+      </div>
+
+      <label class="confidence-note-label">Algemene notitie voor dit vak</label>
+      <textarea class="confidence-note" rows="2" placeholder="Bijv. hoofdstuk 5 eerst herhalen"
         onchange="saveConfidenceNote('${cls.id}',this.value)">${escapeHtml(data.note || '')}</textarea>
-    </div>`;
+    </section>`;
   }).join('') + '</div>';
+
+  saveData(); // also persists any old-score migration done by ensureConfidenceSubjectData()
 }
 
 function renderConfidenceWarning() {
@@ -1788,26 +1954,25 @@ function renderConfidenceWarning() {
   if (!cont) return;
 
   const items = appData.classes.map(cls => {
-    const raw = appData.confidence[cls.id]?.score;
-    const score = raw === undefined || raw === null || raw === '' ? null : Number(raw);
-    return { cls, score };
+    const metrics = confidenceMetrics(cls.id);
+    return { cls, score: metrics.overall, validWeight: metrics.validWeight, totalWeight: metrics.totalWeight };
   });
 
   const low = items
-    .filter(x => x.score !== null && x.score < 50)
+    .filter(x => x.validWeight && x.score < 50)
     .sort((a,b) => a.score - b.score);
 
-  const unset = items.filter(x => x.score === null).length;
+  const incomplete = items.filter(x => !x.validWeight);
 
   if (low.length) {
     cont.innerHTML = low.slice(0,3).map(x => `<div class="widget-item" onclick="showTab('confidence')">
       <div class="widget-item-title"><span class="confidence-mini-dot"></span>${escapeHtml(x.cls.name)}</div>
       <div class="widget-item-meta">${x.score}% · ${confidenceBand(x.score).label}</div>
     </div>`).join('') + (low.length > 3 ? `<div class="widget-empty">+${low.length-3} meer</div>` : '');
-  } else if (unset) {
-    cont.innerHTML = `<div class="widget-item" onclick="showTab('confidence')"><div class="widget-item-title">📝 Confidence invullen</div><div class="widget-item-meta">${unset} nog niet ingesteld</div></div>`;
+  } else if (incomplete.length) {
+    cont.innerHTML = `<div class="widget-item" onclick="showTab('confidence')"><div class="widget-item-title">⚖️ Gewichten aanvullen</div><div class="widget-item-meta">${incomplete.length} vak${incomplete.length === 1 ? '' : 'ken'} niet op 100%</div></div>`;
   } else {
-    cont.innerHTML = '<div class="widget-empty">Geen alarm — alles ≥ 50%</div>';
+    cont.innerHTML = '<div class="widget-empty">Geen alarm — alles volledig gewogen en ≥ 50%</div>';
   }
 }
 
@@ -2277,7 +2442,7 @@ document.addEventListener('change', e => {
 function clearAllData() {
   if (!confirm('⚠️ Alle data verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
   localStorage.removeItem('studieAgenda_v2');
-  appData = { classes:[], events:[], availability:[], weekTasks:[], confidence:{} };
+  appData = { classes:[], events:[], availability:[], weekTasks:[], confidence:{}, hiddenExternalUids:[] };
   initDefaultClasses();
   renderAll();
 }
