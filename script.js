@@ -2360,9 +2360,27 @@ function renderStats() {
 
   // ── 1. Alle afgewerkte items met tijdsduur ──────────────────
   const TIMED_TYPES = ['Studieblok','Les','Taak','Evenement','Andere'];
-  const completed = appData.events.filter(e =>
+  const completedEvents = appData.events.filter(e =>
     e.status === 'Afgewerkt' && e.end
   );
+
+  // Afgevinkte weektaken tellen mee als gewone voltooide taken.
+  // Hun geplande uren worden gebruikt voor "Totaal gestudeerd" en "Voltooide uren per vak".
+  const completedWeekTasks = appData.weekTasks
+    .filter(t => t.done)
+    .map(t => ({
+      id: t.id,
+      title: t.title,
+      type: 'Taak',
+      classId: t.classId || null,
+      status: 'Afgewerkt',
+      _weekTask: true,
+      _statsHours: Math.max(0, Number(t.plannedHours || 0)),
+      start: t.scheduledStart || (t.completedAt ? t.completedAt.slice(0,16) : `${t.weekStart || toInputDate(new Date())}T12:00`),
+      end: t.scheduledEnd || null
+    }));
+
+  const completed = [...completedEvents, ...completedWeekTasks];
 
   // Trofeekast per type
   const typeLabels = {
@@ -2387,7 +2405,9 @@ function renderStats() {
     // Count per type
     byType[ev.type] = (byType[ev.type] || 0) + 1;
     // Hours per class (only if has real duration)
-    const h = Math.max(0, (new Date(ev.end) - new Date(ev.start)) / 3600e3);
+    const h = ev._weekTask
+      ? Math.max(0, Number(ev._statsHours || 0))
+      : Math.max(0, (new Date(ev.end) - new Date(ev.start)) / 3600e3);
     if (h > 0 && TIMED_TYPES.includes(ev.type)) {
       const key = ev.classId || '__none__';
       byClass[key] = (byClass[key] || 0) + h;
@@ -2403,27 +2423,57 @@ function renderStats() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = toInputDate(tomorrow);
 
-  const tomorrowBlocks = appData.events
+  const tomorrowEventBlocks = appData.events
     .filter(e => !['Afgewerkt','Geannuleerd'].includes(e.status)
-               && toInputDate(new Date(e.start)) === tomorrowStr)
+               && toInputDate(new Date(e.start)) === tomorrowStr);
+
+  const tomorrowWeekTasks = appData.weekTasks
+    .filter(t => !t.done && t.scheduledStart && toInputDate(new Date(t.scheduledStart)) === tomorrowStr)
+    .map(t => ({
+      ...t,
+      type: 'Weektaak',
+      status: 'Nog te doen',
+      start: t.scheduledStart,
+      end: t.scheduledEnd || localDateTimeAfterHours(t.scheduledStart, Number(t.plannedHours || 1)),
+      _weekTask: true
+    }));
+
+  const tomorrowBlocks = [...tomorrowEventBlocks, ...tomorrowWeekTasks]
     .sort((a,b) => new Date(a.start) - new Date(b.start));
 
   const tomorrowH = tomorrowBlocks.reduce((s,e) =>
-    s + (e.end ? Math.max(0,(new Date(e.end)-new Date(e.start))/3600e3) : 0), 0);
+    s + (e.end ? Math.max(0,(new Date(e.end)-new Date(e.start))/3600e3) : Number(e.plannedHours || 0)), 0);
 
   // ── 3. Komende 7 dagen ──────────────────────────────────────
   const weekEnd = new Date(now.getTime() + 7*864e5);
 
-  const weekBlocks = appData.events
+  const weekEventBlocks = appData.events
     .filter(e => {
       const s = new Date(e.start);
       return !['Afgewerkt','Geannuleerd'].includes(e.status)
           && s >= now && s < weekEnd;
+    });
+
+  const weekTaskBlocks = appData.weekTasks
+    .filter(t => {
+      if (t.done || !t.scheduledStart) return false;
+      const s = new Date(t.scheduledStart);
+      return s >= now && s < weekEnd;
     })
+    .map(t => ({
+      ...t,
+      type: 'Weektaak',
+      status: 'Nog te doen',
+      start: t.scheduledStart,
+      end: t.scheduledEnd || localDateTimeAfterHours(t.scheduledStart, Number(t.plannedHours || 1)),
+      _weekTask: true
+    }));
+
+  const weekBlocks = [...weekEventBlocks, ...weekTaskBlocks]
     .sort((a,b) => new Date(a.start) - new Date(b.start));
 
   const weekH = weekBlocks.reduce((s,e) =>
-    s + (e.end ? Math.max(0,(new Date(e.end)-new Date(e.start))/3600e3) : 0), 0);
+    s + (e.end ? Math.max(0,(new Date(e.end)-new Date(e.start))/3600e3) : Number(e.plannedHours || 0)), 0);
 
   // ── Motivatie ───────────────────────────────────────────────
   let motivation, motivationClass;
@@ -2572,10 +2622,11 @@ function renderStats() {
 function _upcomingBlockHtml(ev) {
   const cls = classById(ev.classId);
   const col = cls ? cls.color : eventColor(ev);
-  const h   = ev.end ? Math.max(0,(new Date(ev.end)-new Date(ev.start))/3600e3) : 0;
+  const h   = ev.end ? Math.max(0,(new Date(ev.end)-new Date(ev.start))/3600e3) : Number(ev.plannedHours || 0);
   const timeStr = fmtTime(ev.start) + (ev.end ? ' – ' + fmtTime(ev.end) : '');
-  return `<div class="stats-upcoming-block" onclick="openEventDetail('${ev.id}')" style="border-left-color:${col}">
-    <div class="sub-title">${ev.title}</div>
+  const openAction = ev._weekTask ? 'openWeekTaskDetail' : 'openEventDetail';
+  return `<div class="stats-upcoming-block" onclick="${openAction}('${ev.id}')" style="border-left-color:${col}">
+    <div class="sub-title">${ev._weekTask ? '☐ ' : ''}${ev.title}</div>
     <div class="sub-meta">${timeStr} &middot; ${fmtHours(h)}</div>
     ${cls ? `<div class="sub-class" style="color:${col}">${cls.name}</div>` : ''}
   </div>`;
