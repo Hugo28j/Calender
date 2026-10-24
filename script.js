@@ -30,14 +30,23 @@ async function init() {
   if (!appData.weekTasks)    appData.weekTasks = [];
   if (!appData.confidence || Array.isArray(appData.confidence)) appData.confidence = {};
   if (!Array.isArray(appData.confidenceSubjects)) {
-    appData.confidenceSubjects = appData.classes.map(c => ({
-      id: c.id,
-      classId: c.id,
-      name: c.name,
-      color: c.color,
-      collapsed: false
-    }));
+    appData.confidenceSubjects = appData.classes
+      .filter(c => !isExcludedConfidenceName(c.name))
+      .map(c => ({
+        id: c.id,
+        classId: c.id,
+        name: c.name,
+        color: c.color,
+        collapsed: false
+      }));
     saveData();
+  } else {
+    const before = appData.confidenceSubjects.length;
+    appData.confidenceSubjects = appData.confidenceSubjects.filter(s => {
+      const cls = s?.classId ? appData.classes.find(c => c.id === s.classId) : null;
+      return !isExcludedConfidenceName(cls?.name || s?.name);
+    });
+    if (appData.confidenceSubjects.length !== before) saveData();
   }
   if (!Array.isArray(appData.hiddenExternalUids)) appData.hiddenExternalUids = [];
   renderAll();
@@ -1718,6 +1727,11 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#039;');
 }
 
+function isExcludedConfidenceName(name) {
+  const n = String(name || '').trim().toLowerCase();
+  return n === 'sport' || n === 'familie';
+}
+
 function confidenceBand(score) {
   const n = Number(score);
   if (n < 25) return { key:'critical', label:'Grote achterstand', icon:'🔴', color:'#DC2626' };
@@ -1739,7 +1753,11 @@ function ensureConfidenceSubjects() {
   }
 
   appData.confidenceSubjects = appData.confidenceSubjects
-    .filter(s => s && s.id)
+    .filter(s => {
+      if (!s || !s.id) return false;
+      const cls = s.classId ? classById(s.classId) : null;
+      return !isExcludedConfidenceName(cls?.name || s.name);
+    })
     .map((s, index) => ({
       id: s.id,
       classId: s.classId || null,
@@ -1816,7 +1834,9 @@ function openConfidenceSubjectModal() {
   ensureConfidenceSubjects();
   const select = document.getElementById('confidence-subject-class');
   const usedClassIds = new Set(appData.confidenceSubjects.map(s => s.classId).filter(Boolean));
-  const available = appData.classes.filter(c => !usedClassIds.has(c.id));
+  const available = appData.classes.filter(c =>
+    !usedClassIds.has(c.id) && !isExcludedConfidenceName(c.name)
+  );
 
   select.innerHTML = '<option value="">— Eigen vak —</option>' +
     available.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
@@ -1849,6 +1869,11 @@ function saveConfidenceSubject() {
 
   if (!name) {
     alert('Geef het vak een naam.');
+    return;
+  }
+
+  if (isExcludedConfidenceName(cls?.name || name)) {
+    alert('Sport en Familie horen niet bij Vak-confidence.');
     return;
   }
 
