@@ -30,23 +30,14 @@ async function init() {
   if (!appData.weekTasks)    appData.weekTasks = [];
   if (!appData.confidence || Array.isArray(appData.confidence)) appData.confidence = {};
   if (!Array.isArray(appData.confidenceSubjects)) {
-    appData.confidenceSubjects = appData.classes
-      .filter(c => !isExcludedConfidenceName(c.name))
-      .map(c => ({
-        id: c.id,
-        classId: c.id,
-        name: c.name,
-        color: c.color,
-        collapsed: false
-      }));
+    appData.confidenceSubjects = appData.classes.map(c => ({
+      id: c.id,
+      classId: c.id,
+      name: c.name,
+      color: c.color,
+      collapsed: false
+    }));
     saveData();
-  } else {
-    const before = appData.confidenceSubjects.length;
-    appData.confidenceSubjects = appData.confidenceSubjects.filter(s => {
-      const cls = s?.classId ? appData.classes.find(c => c.id === s.classId) : null;
-      return !isExcludedConfidenceName(cls?.name || s?.name);
-    });
-    if (appData.confidenceSubjects.length !== before) saveData();
   }
   if (!Array.isArray(appData.hiddenExternalUids)) appData.hiddenExternalUids = [];
   renderAll();
@@ -1727,11 +1718,6 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#039;');
 }
 
-function isExcludedConfidenceName(name) {
-  const n = String(name || '').trim().toLowerCase();
-  return n === 'sport' || n === 'familie';
-}
-
 function confidenceBand(score) {
   const n = Number(score);
   if (n < 25) return { key:'critical', label:'Grote achterstand', icon:'🔴', color:'#DC2626' };
@@ -1753,11 +1739,7 @@ function ensureConfidenceSubjects() {
   }
 
   appData.confidenceSubjects = appData.confidenceSubjects
-    .filter(s => {
-      if (!s || !s.id) return false;
-      const cls = s.classId ? classById(s.classId) : null;
-      return !isExcludedConfidenceName(cls?.name || s.name);
-    })
+    .filter(s => s && s.id)
     .map((s, index) => ({
       id: s.id,
       classId: s.classId || null,
@@ -1834,9 +1816,7 @@ function openConfidenceSubjectModal() {
   ensureConfidenceSubjects();
   const select = document.getElementById('confidence-subject-class');
   const usedClassIds = new Set(appData.confidenceSubjects.map(s => s.classId).filter(Boolean));
-  const available = appData.classes.filter(c =>
-    !usedClassIds.has(c.id) && !isExcludedConfidenceName(c.name)
-  );
+  const available = appData.classes.filter(c => !usedClassIds.has(c.id));
 
   select.innerHTML = '<option value="">— Eigen vak —</option>' +
     available.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
@@ -1869,11 +1849,6 @@ function saveConfidenceSubject() {
 
   if (!name) {
     alert('Geef het vak een naam.');
-    return;
-  }
-
-  if (isExcludedConfidenceName(cls?.name || name)) {
-    alert('Sport en Familie horen niet bij Vak-confidence.');
     return;
   }
 
@@ -2377,6 +2352,16 @@ function searchAndFilter() {
 }
 
 // ── STATISTIEKEN ──────────────────────────────────────────────
+function isExcludedFromStudyStats(item) {
+  if (!item) return false;
+  const type = String(item.type || '').trim().toLowerCase();
+  if (type === 'sport' || type === 'familie') return true;
+
+  const cls = item.classId ? classById(item.classId) : null;
+  const className = String(cls?.name || '').trim().toLowerCase();
+  return className === 'sport' || className === 'familie';
+}
+
 function renderStats() {
   const cont = document.getElementById('stats-content');
   if (!cont) return;
@@ -2386,13 +2371,13 @@ function renderStats() {
   // ── 1. Alle afgewerkte items met tijdsduur ──────────────────
   const TIMED_TYPES = ['Studieblok','Les','Taak','Evenement','Andere'];
   const completedEvents = appData.events.filter(e =>
-    e.status === 'Afgewerkt' && e.end
+    e.status === 'Afgewerkt' && e.end && !isExcludedFromStudyStats(e)
   );
 
   // Afgevinkte weektaken tellen mee als gewone voltooide taken.
   // Hun geplande uren worden gebruikt voor "Totaal gestudeerd" en "Voltooide uren per vak".
   const completedWeekTasks = appData.weekTasks
-    .filter(t => t.done)
+    .filter(t => t.done && !isExcludedFromStudyStats(t))
     .map(t => ({
       id: t.id,
       title: t.title,
@@ -2414,8 +2399,6 @@ function renderStats() {
     Taak:       '✅ Taken',
     Deadline:   '⏰ Deadlines',
     Evenement:  '🎉 Evenementen',
-    Familie:    '👨‍👩‍👦 Familie',
-    Sport:      '🏃 Sport',
     Andere:     '📎 Andere',
   };
 
@@ -2450,10 +2433,13 @@ function renderStats() {
 
   const tomorrowEventBlocks = appData.events
     .filter(e => !['Afgewerkt','Geannuleerd'].includes(e.status)
+               && !isExcludedFromStudyStats(e)
                && toInputDate(new Date(e.start)) === tomorrowStr);
 
   const tomorrowWeekTasks = appData.weekTasks
-    .filter(t => !t.done && t.scheduledStart && toInputDate(new Date(t.scheduledStart)) === tomorrowStr)
+    .filter(t => !t.done && t.scheduledStart
+      && !isExcludedFromStudyStats(t)
+      && toInputDate(new Date(t.scheduledStart)) === tomorrowStr)
     .map(t => ({
       ...t,
       type: 'Weektaak',
@@ -2476,12 +2462,13 @@ function renderStats() {
     .filter(e => {
       const s = new Date(e.start);
       return !['Afgewerkt','Geannuleerd'].includes(e.status)
+          && !isExcludedFromStudyStats(e)
           && s >= now && s < weekEnd;
     });
 
   const weekTaskBlocks = appData.weekTasks
     .filter(t => {
-      if (t.done || !t.scheduledStart) return false;
+      if (t.done || !t.scheduledStart || isExcludedFromStudyStats(t)) return false;
       const s = new Date(t.scheduledStart);
       return s >= now && s < weekEnd;
     })
@@ -2550,7 +2537,7 @@ function renderStats() {
       const count = byType[type] || 0;
       if (count === 0) return;
       const col = { Studieblok:'#3B82F6', Les:'#8B5CF6', Taak:'#6366F1',
-                    Deadline:'#EF4444', Evenement:'#F59E0B', Familie:'#F97316', Sport:'#0EA5E9', Andere:'#6B7280' }[type] || '#9CA3AF';
+                    Deadline:'#EF4444', Evenement:'#F59E0B', Andere:'#6B7280' }[type] || '#9CA3AF';
       html += `<div class="stats-trophy-card" style="border-top-color:${col}">
         <div class="stats-trophy-label">${label}</div>
         <div class="stats-trophy-count" style="color:${col}">${count}</div>
