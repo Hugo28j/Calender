@@ -2329,6 +2329,24 @@ function _buildStudyHoursWidget(weekOffset, _id) {
     map[e.classId] = (map[e.classId] || 0) + h;
   });
 
+  // Weekchecklist-taken tellen ook mee in de studiebalken.
+  // Hiervoor gebruiken we de geplande uren, ook als de taak nog niet
+  // op een exact tijdstip in de kalender werd gezet.
+  const weekKey = toInputDate(wkS);
+  appData.weekTasks.forEach(t => {
+    if (!t.classId || isExcludedFromStudyStats(t)) return;
+
+    const belongsToWeek = t.weekStart
+      ? t.weekStart === weekKey
+      : (t.scheduledStart && new Date(t.scheduledStart) >= wkS && new Date(t.scheduledStart) < wkE);
+
+    if (!belongsToWeek) return;
+
+    const h = Math.max(0, Number(t.plannedHours || 0));
+    if (h <= 0) return;
+    map[t.classId] = (map[t.classId] || 0) + h;
+  });
+
   const entries = Object.entries(map).sort((a,b) => b[1]-a[1]);
   if (entries.length === 0) return `<div class="widget-empty">Geen studieuren gepland</div>`;
   const maxH = Math.max(...entries.map(e=>e[1]));
