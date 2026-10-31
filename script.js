@@ -2321,11 +2321,16 @@ function _buildStudyHoursWidget(weekOffset, _id) {
 
   const map  = {};
   appData.events.forEach(e => {
-    if (!e.classId || !e.end) return;
+    if (!e.classId) return;
     if (!['Studieblok','Les','Taak'].includes(e.type)) return;
     const s = new Date(e.start);
     if (s < wkS || s >= wkE) return;
-    const h = (new Date(e.end) - s) / 3600e3;
+
+    const h = e.end
+      ? Math.max(0, (new Date(e.end) - s) / 3600e3)
+      : Math.max(0, Number(e.plannedHours || 0));
+
+    if (h <= 0) return;
     map[e.classId] = (map[e.classId] || 0) + h;
   });
 
@@ -2336,9 +2341,15 @@ function _buildStudyHoursWidget(weekOffset, _id) {
   appData.weekTasks.forEach(t => {
     if (!t.classId || isExcludedFromStudyStats(t)) return;
 
-    const belongsToWeek = t.weekStart
-      ? t.weekStart === weekKey
-      : (t.scheduledStart && new Date(t.scheduledStart) >= wkS && new Date(t.scheduledStart) < wkE);
+    const scheduledInWeek = Boolean(
+      t.scheduledStart &&
+      new Date(t.scheduledStart) >= wkS &&
+      new Date(t.scheduledStart) < wkE
+    );
+
+    // Een taak hoort bij deze balk als de gekozen checklist-week klopt
+    // OF als de ingeplande kalenderdatum in deze week valt.
+    const belongsToWeek = t.weekStart === weekKey || scheduledInWeek;
 
     if (!belongsToWeek) return;
 
