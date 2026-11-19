@@ -2795,7 +2795,6 @@ function renderStats() {
       const color     = cls ? cls.color : (meta?.color || '#9CA3AF');
       const pct       = (h / maxH) * 100;
       const sharePct  = barsGrandTotal > 0 ? Math.round((h / barsGrandTotal) * 100) : 0;
-      const lessonH   = includeTimeEditLessons ? (timeEditByClass[key] || 0) : 0;
       html += `<div class="stats-bar-row">
         <div class="stats-bar-meta">
           <span class="stats-bar-dot" style="background:${color}"></span>
@@ -2807,7 +2806,6 @@ function renderStats() {
         </div>
         <div class="stats-bar-hours-wrap">
           <div class="stats-bar-hours">${fmtHours(h)}</div>
-          ${lessonH > 0 ? `<div class="stats-bar-lesson-hours">+${fmtHours(lessonH)} les</div>` : ''}
         </div>
       </div>`;
     });
