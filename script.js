@@ -272,6 +272,12 @@ function parseICS(text) {
     const title = icsUnescape(props.SUMMARY?.[0]?.value || 'VUB les');
     const location = icsUnescape(props.LOCATION?.[0]?.value || '');
     const description = icsUnescape(props.DESCRIPTION?.[0]?.value || '');
+    const courseNames = [...new Set((props.ATTENDEE || [])
+      .map(att => {
+        const match = att.left.match(/CN="course:\s*([^"]+)"/i);
+        return match ? icsUnescape(match[1]).replace(/\s*\(\d{4}\)\s*$/, '').trim() : '';
+      })
+      .filter(Boolean))];
 
     events.push({
       id: 'timeedit_' + btoa(unescape(encodeURIComponent(uid))).replace(/[^a-zA-Z0-9]/g,'').slice(0,32) + '_' + idx,
@@ -279,6 +285,7 @@ function parseICS(text) {
       title,
       location,
       description,
+      courseNames,
       start,
       end,
       type: 'VUB-les',
@@ -400,6 +407,7 @@ function openExternalEventDetail(id) {
     <div class="detail-row"><span class="detail-label">Start</span><span class="detail-value">${fmtDate(ev.start)} &middot; ${fmtTime(ev.start)}</span></div>
     <div class="detail-row"><span class="detail-label">Einde</span><span class="detail-value">${fmtDate(ev.end)} &middot; ${fmtTime(ev.end)}</span></div>
     <div class="detail-row"><span class="detail-label">Duur</span><span class="detail-value">${fmtDuration(ev.start, ev.end)}</span></div>
+    ${ev.courseNames?.length ? `<div class="detail-row"><span class="detail-label">Vak</span><span class="detail-value">${ev.courseNames.map(escapeHtml).join(' · ')}</span></div>` : ''}
     ${ev.location ? `<div class="detail-row"><span class="detail-label">Lokaal</span><span class="detail-value">${escapeHtml(ev.location)}</span></div>` : ''}
     ${ev.description ? `<div class="detail-desc">${escapeHtml(ev.description).replace(/\n/g,'<br>')}</div>` : ''}
     <div class="readonly-note">💡 Verwijderen verbergt alleen deze les in jouw agenda. De les blijft gewoon in TimeEdit bestaan.</div>
@@ -2381,6 +2389,90 @@ function searchAndFilter() {
 }
 
 // ── STATISTIEKEN ──────────────────────────────────────────────
+function statsIncludeTimeEditLessons() {
+  return localStorage.getItem('stats_include_timeedit_lessons') !== '0';
+}
+
+function setStatsIncludeTimeEditLessons(include) {
+  localStorage.setItem('stats_include_timeedit_lessons', include ? '1' : '0');
+  renderStats();
+}
+
+function normalizeStudyName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\(\s*\d{4}\s*\)/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function timeEditCourseMatchScore(courseName, className) {
+  const course = normalizeStudyName(courseName);
+  const cls = normalizeStudyName(className);
+  if (!course || !cls) return 0;
+  if (course === cls) return 1000;
+
+  const families = [
+    { hit: course.includes('bachelorproef'), cls: c => c.includes('bachelorproef') },
+    { hit: course.includes('business management'), cls: c => c.includes('business management') || c.includes('business managment') },
+    { hit: course.includes('pneumatiek'), cls: c => c.includes('pneumatiek') },
+    { hit: course.includes('energieconversie'), cls: c => c.includes('energieconversie') },
+    { hit: course.includes('aerodynamica'), cls: c => c.includes('aerodynamica') },
+    { hit: course.includes('sterkteleer'), cls: c => c.includes('sterkteleer') },
+    { hit: course.includes('wiskunde') && course.includes('signalen'), cls: c => c.includes('wiskunde') && c.includes('signalen') },
+    { hit: course.includes('systeemtheorie') || course.includes('controletheorie'), cls: c => c.includes('systeem') || c.includes('controle') || c.includes('regeltechniek') }
+  ];
+  for (const family of families) {
+    if (family.hit && family.cls(cls)) return 900;
+  }
+
+  if (course.includes(cls) && cls.length >= 6) return 700 + Math.min(cls.length, 100);
+  if (cls.includes(course) && course.length >= 6) return 700 + Math.min(course.length, 100);
+
+  const courseWords = new Set(course.split(' ').filter(w => w.length >= 5));
+  const clsWords = cls.split(' ').filter(w => w.length >= 5);
+  const overlap = clsWords.filter(w => courseWords.has(w)).length;
+  return overlap >= 2 ? 400 + overlap * 20 : 0;
+}
+
+function cleanTimeEditCourseName(name) {
+  const raw = String(name || '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+  const n = normalizeStudyName(raw);
+  if (n.includes('systeemtheorie') || n.includes('controletheorie')) return 'Systeem- en controletheorie';
+  if (n.includes('bachelorproef') && n.includes('elektromechanica')) return 'Bachelorproef';
+  return raw || 'VUB-les';
+}
+
+function resolveTimeEditStudyBucket(ev) {
+  const courses = Array.isArray(ev.courseNames) && ev.courseNames.length
+    ? ev.courseNames
+    : [String(ev.title || '').replace(/^student group:\s*/i, '')];
+
+  let best = null;
+  courses.forEach(course => {
+    appData.classes.forEach(cls => {
+      const score = timeEditCourseMatchScore(course, cls.name);
+      if (!best || score > best.score) best = { score, cls, course };
+    });
+  });
+
+  if (best && best.score >= 400) {
+    return { key: best.cls.id, name: best.cls.name, color: best.cls.color, classId: best.cls.id };
+  }
+
+  const fallbackCourse = courses[0] || 'VUB-les';
+  const name = cleanTimeEditCourseName(fallbackCourse);
+  return {
+    key: '__timeedit__' + normalizeStudyName(name).replace(/\s+/g, '_'),
+    name,
+    color: TIMEEDIT_COLOR,
+    classId: null
+  };
+}
+
 function isExcludedFromStudyStats(item) {
   if (!item) return false;
   const type = String(item.type || '').trim().toLowerCase();
@@ -2452,7 +2544,37 @@ function renderStats() {
     }
   });
 
-  const classEntries = Object.entries(byClass).sort((a,b) => b[1]-a[1]);
+  // TimeEdit-laag: alleen lessen die al afgelopen zijn en niet verborgen werden.
+  const includeTimeEditLessons = statsIncludeTimeEditLessons();
+  const timeEditByClass = {};
+  const timeEditMeta = {};
+  let timeEditTotal = 0;
+
+  externalEvents.forEach(ev => {
+    if (!ev?.start || !ev?.end) return;
+    if (appData.hiddenExternalUids.includes(ev.uid)) return;
+    if (new Date(ev.end) > now) return;
+
+    const h = Math.max(0, (new Date(ev.end) - new Date(ev.start)) / 3600e3);
+    if (h <= 0) return;
+
+    const bucket = resolveTimeEditStudyBucket(ev);
+    if (!bucket?.key) return;
+
+    timeEditByClass[bucket.key] = (timeEditByClass[bucket.key] || 0) + h;
+    timeEditMeta[bucket.key] = bucket;
+    timeEditTotal += h;
+  });
+
+  const displayByClass = { ...byClass };
+  if (includeTimeEditLessons) {
+    Object.entries(timeEditByClass).forEach(([key, h]) => {
+      displayByClass[key] = (displayByClass[key] || 0) + h;
+    });
+  }
+
+  const barsGrandTotal = grandTotal + (includeTimeEditLessons ? timeEditTotal : 0);
+  const classEntries = Object.entries(displayByClass).sort((a,b) => b[1]-a[1]);
   const maxH = classEntries.length ? Math.max(...classEntries.map(e=>e[1])) : 1;
 
   // ── 2. Morgen ───────────────────────────────────────────────
@@ -2579,7 +2701,16 @@ function renderStats() {
 
   // ── Per-vak ──────────────────────────────────────────────────
   html += `<div class="stats-section">
-    <div class="stats-section-title">📚 Voltooide uren per vak</div>`;
+    <div class="stats-section-head">
+      <div>
+        <div class="stats-section-title stats-section-title-inline">📚 Voltooide uren per vak</div>
+        <div class="stats-section-sub">Voorbije TimeEdit-lessen tellen alleen mee als je ze niet uit je kalender hebt verwijderd.</div>
+      </div>
+      <div class="stats-lesson-toggle" role="group" aria-label="TimeEdit-lessen tonen in uren per vak">
+        <button class="${!includeTimeEditLessons ? 'active' : ''}" onclick="setStatsIncludeTimeEditLessons(false)">Zonder lessen</button>
+        <button class="${includeTimeEditLessons ? 'active' : ''}" onclick="setStatsIncludeTimeEditLessons(true)">Met lessen</button>
+      </div>
+    </div>`;
 
   if (classEntries.length === 0) {
     html += `<div class="stats-empty">
@@ -2589,27 +2720,34 @@ function renderStats() {
   } else {
     html += '<div class="stats-bars-list">';
     classEntries.forEach(([key, h]) => {
-      const cls      = key === '__none__' ? null : classById(key);
-      const name     = cls ? cls.name : 'Zonder klasse';
-      const color    = cls ? cls.color : '#9CA3AF';
-      const pct      = (h / maxH) * 100;
-      const sharePct = grandTotal > 0 ? Math.round((h / grandTotal) * 100) : 0;
+      const cls       = key === '__none__' ? null : classById(key);
+      const meta      = timeEditMeta[key] || null;
+      const name      = cls ? cls.name : (meta?.name || 'Zonder klasse');
+      const color     = cls ? cls.color : (meta?.color || '#9CA3AF');
+      const pct       = (h / maxH) * 100;
+      const sharePct  = barsGrandTotal > 0 ? Math.round((h / barsGrandTotal) * 100) : 0;
+      const lessonH   = includeTimeEditLessons ? (timeEditByClass[key] || 0) : 0;
       html += `<div class="stats-bar-row">
         <div class="stats-bar-meta">
           <span class="stats-bar-dot" style="background:${color}"></span>
-          <span class="stats-bar-name">${name}</span>
+          <span class="stats-bar-name">${escapeHtml(name)}</span>
           <span class="stats-bar-share">${sharePct}%</span>
         </div>
         <div class="stats-bar-track">
           <div class="stats-bar-fill" style="width:${pct}%;background:${color}"></div>
         </div>
-        <div class="stats-bar-hours">${fmtHours(h)}</div>
+        <div class="stats-bar-hours-wrap">
+          <div class="stats-bar-hours">${fmtHours(h)}</div>
+          ${lessonH > 0 ? `<div class="stats-bar-lesson-hours">+${fmtHours(lessonH)} les</div>` : ''}
+        </div>
       </div>`;
     });
     html += `<div class="stats-grand-total">
-      <span>Totaal</span>
-      <span>${fmtHours(grandTotal)}</span>
-    </div></div>`;
+      <span>${includeTimeEditLessons ? 'Totaal incl. TimeEdit-lessen' : 'Totaal zonder TimeEdit-lessen'}</span>
+      <span>${fmtHours(barsGrandTotal)}</span>
+    </div>
+    ${includeTimeEditLessons && timeEditTotal > 0 ? `<div class="stats-timeedit-total">🎓 Daarvan ${fmtHours(timeEditTotal)} aan zichtbare, voorbije TimeEdit-lessen</div>` : ''}
+    </div>`;
   }
   html += '</div>';
 
