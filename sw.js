@@ -1,4 +1,4 @@
-const CACHE = 'agenda-shell-v13';
+const CACHE = 'agenda-shell-v14';
 const SHELL = ['./', './index.html', './style.css', './script.js', './manifest.webmanifest'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));

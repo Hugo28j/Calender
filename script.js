@@ -642,6 +642,71 @@ function getMonday(d) {
   return dt;
 }
 
+function layoutOverlappingTimedItems(items) {
+  const entries = items.map((item, index) => {
+    const start = new Date(item.start);
+    const rawEnd = item.end ? new Date(item.end) : new Date(start.getTime() + 3600e3);
+    const end = rawEnd > start ? rawEnd : new Date(start.getTime() + 3600e3);
+    return {
+      item,
+      index,
+      startMs: start.getTime(),
+      endMs: end.getTime(),
+      lane: 0,
+      lanes: 1
+    };
+  }).filter(e => Number.isFinite(e.startMs) && Number.isFinite(e.endMs));
+
+  entries.sort((a,b) => a.startMs - b.startMs || a.endMs - b.endMs || a.index - b.index);
+
+  const layout = new Map();
+  let group = [];
+  let groupEnd = -Infinity;
+
+  function flushGroup() {
+    if (!group.length) return;
+
+    const laneEnds = [];
+    group.forEach(entry => {
+      let lane = laneEnds.findIndex(endMs => endMs <= entry.startMs);
+      if (lane === -1) {
+        lane = laneEnds.length;
+        laneEnds.push(entry.endMs);
+      } else {
+        laneEnds[lane] = entry.endMs;
+      }
+      entry.lane = lane;
+    });
+
+    const lanes = Math.max(1, laneEnds.length);
+    group.forEach(entry => {
+      entry.lanes = lanes;
+      layout.set(entry.item, { lane: entry.lane, lanes });
+    });
+
+    group = [];
+    groupEnd = -Infinity;
+  }
+
+  entries.forEach(entry => {
+    // start === groupEnd means the next event starts exactly when the previous one ends,
+    // so those do not need to share horizontal space.
+    if (group.length && entry.startMs >= groupEnd) flushGroup();
+    group.push(entry);
+    groupEnd = Math.max(groupEnd, entry.endMs);
+  });
+  flushGroup();
+
+  return layout;
+}
+
+function timedItemHorizontalStyle(layout, item, edgePx = 2) {
+  const pos = layout.get(item) || { lane: 0, lanes: 1 };
+  const widthPct = 100 / pos.lanes;
+  const leftPct = widthPct * pos.lane;
+  return `left:calc(${leftPct}% + ${edgePx}px);width:calc(${widthPct}% - ${edgePx * 2}px);right:auto;`;
+}
+
 function renderWeekView() {
   const monday = getMonday(currentDate);
   const days   = Array.from({length:7}, (_,i) => { const d=new Date(monday); d.setDate(d.getDate()+i); return d; });
@@ -683,6 +748,7 @@ function renderWeekView() {
   days.forEach(d => {
     const ds    = toInputDate(d);
     const items = itemsForDay(ds);
+    const overlapLayout = layoutOverlappingTimedItems(items);
     const totalH = (WEEK_END_H - WEEK_START_H) * HOUR_H;
     const drawAttr = availDrawMode ? `onpointerdown="startAvailDrag(event,'${ds}')"` : '';
     html += `<div class="week-day-col${availDrawMode ? ' avail-draw-mode' : ''}" style="min-height:${totalH}px" ${drawAttr}>`;
@@ -701,7 +767,8 @@ function renderWeekView() {
       const hgt = Math.max(18, (bot - Math.max(sh, WEEK_START_H)) * HOUR_H);
       const col = item._avail ? '#059669' : eventColor(item);
       const opa = item.status === 'Afgewerkt' ? 0.5 : 1;
-      html += `<div class="week-event" style="top:${top}px;height:${hgt}px;background:${col};opacity:${opa}"
+      const horizontal = timedItemHorizontalStyle(overlapLayout, item, 2);
+      html += `<div class="week-event" style="top:${top}px;height:${hgt}px;${horizontal}background:${col};opacity:${opa}"
         onclick="event.stopPropagation();${itemOpenAction(item)}('${item.id}')"
         title="${item.title}">
         <div class="we-time">${fmtTime(item.start)}</div>
@@ -790,6 +857,7 @@ function renderDayView() {
   document.getElementById('calendar-title').textContent = title;
 
   const items   = itemsForDay(ds);
+  const overlapLayout = layoutOverlappingTimedItems(items);
   const hours   = Array.from({length: WEEK_END_H - WEEK_START_H}, (_,i) => i + WEEK_START_H);
   const totalH  = hours.length * HOUR_H;
 
@@ -816,8 +884,9 @@ function renderDayView() {
     const hgt = Math.max(24, (Math.min(eh,WEEK_END_H) - Math.max(sh,WEEK_START_H)) * HOUR_H);
     const col = item._avail ? '#059669' : eventColor(item);
     const cls = classById(item.classId);
-    html += `<div class="day-event" style="top:${top}px;height:${hgt}px;background:${col}"
-      onclick="${itemOpenAction(item)}('${item.id}')">
+    const horizontal = timedItemHorizontalStyle(overlapLayout, item, 8);
+    html += `<div class="day-event" style="top:${top}px;height:${hgt}px;${horizontal}background:${col}"
+      onclick="event.stopPropagation();${itemOpenAction(item)}('${item.id}')">
       <div class="de-time">${fmtTime(item.start)} – ${fmtTime(e)}</div>
       <div class="de-title">${item.title}</div>
       ${cls ? `<div class="de-class">${cls.name}</div>` : ''}
